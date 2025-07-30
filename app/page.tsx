@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { getAllPosts } from "../utils/posts";
+import Image from "next/image";
 
 export default function Home() {
   const posts = getAllPosts();
   return (
-    <div className="font-sans flex flex-col gap-4 mx-12 sm:mx-32">
+    <div className="font-sans flex flex-col gap-4 mx-12 h-screen sm:mx-32">
       <div className="flex font-medium items-center justify-center pt-10 pb-8 border-b-1 border-gray-400">
         <Link href="/" className="hover:underline">
           <h1 className="text-2xl">vovonacci@PJT</h1>
