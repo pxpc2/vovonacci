@@ -32,3 +32,15 @@ _Markets are currently pricing in just under 50 basis points of rate cuts by yea
 _However, dissent from two Fed members could shift expectations toward a September cut, which could potentially boost gold, he added._
 
 _Gold tends to benefit in a low-interest-rate environment as the reduced yield on competing assets makes the non-yielding metal more attractive to investors. [Reuters News]_
+<br><br>
+
+## OPERAÇÕES
+
+### Trade #1
+
+![Alt text](/TRADES/trade1-29-07-25.png)
+Venda realizada no NQ após pullback dentro da tríplice aliança formada no dia entre CR, HVL e PS, chegou para romper esticado, fez pullback e se mantendo abaixo a gente entrou vendido para pegar a aceleração provável rumo ao GEX 2, próximo obstáculo. Dia abaixo do CR 0DTE se configurava uma tendência de baixa.
+<b>RESULTADO:</b> +$250.00
+<br>
+
+### Trade #2
