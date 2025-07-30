@@ -1,3 +1,6 @@
+// app/blog/[slug]/page.tsx
+export const dynamicParams = true;
+
 import { notFound } from "next/navigation";
 import { marked } from "marked";
 import { getAllPosts, getPostBySlug } from "../../../utils/posts";
@@ -27,9 +30,9 @@ export default async function BlogPost({
           <h1 className="text-2xl">vovonacci@PJT</h1>
         </Link>
       </div>
+
       <article className="mx-12 flex flex-col items-center justify-center prose max-w-none dark:prose-invert">
         <div className="flex">
-          {/* quero aqui um butão de voltar ou o header*/}
           <div className="flex flex-col py-10">
             <h1 className="text-2xl font-bold">{post.title}</h1>
             <p className="text-xl text-gray-300">{post.date}</p>
