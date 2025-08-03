@@ -1,4 +1,4 @@
 ---
 title: "Sunday Prep"
-date: "03 de agosto de 2025"
+date: "03/08/2025"
 ---
