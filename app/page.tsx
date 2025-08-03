@@ -2,7 +2,15 @@ import Link from "next/link";
 import { getAllPosts } from "../utils/posts";
 
 export default function Home() {
-  const posts = getAllPosts();
+  const posts = getAllPosts().sort((a, b) => {
+    const [dayA, monthA, yearA] = a.date.split("/").map(Number);
+    const [dayB, monthB, yearB] = b.date.split("/").map(Number);
+
+    const dateA = new Date(yearA, monthA - 1, dayA);
+    const dateB = new Date(yearB, monthB - 1, dayB);
+
+    return dateB.getTime() - dateA.getTime();
+  });
   return (
     <div className="relative h-screen">
       <div className="absolute inset-0 bg-[url('/wp.png')] bg-cover bg-center bg-no-repeat opacity-15 z-0"></div>
