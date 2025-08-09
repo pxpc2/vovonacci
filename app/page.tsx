@@ -22,26 +22,31 @@ export default function Home() {
         </div>
         <div className="flex items-center justify-center font-light">
           <p>
-            Vovonacci do Porteiro José Traders. Opero daytrade desde 2018,
-            atualmente com foco em mercados futuros americanos.
+            Vovonacci do Porteiro José Traders. Opero daytrade em mercados
+            futuros desde 2018, focando em futuros americanos desde 2023.
             <br />
-            Aqui compartilho de artigos de preparação diária e revisões de
-            pregão. Sinta-se à vontade para explorar e pegar algum conhecimento.{" "}
+            Aqui compartilho minhas preparações diárias/semanais, revisões de
+            pregão, e uns posts aleatórios de vez em nunca. <br /> Sinta-se à
+            vontade para explorar e entrar em contato em caso de possuir
+            perguntas. <br /> Nosso intuito aqui é puramente educativo, deve-se
+            lembrar. <br />
             <br />
-            <br />
-            <b>Dúvidas boas? </b> comunique-se com nois{" "}
-            <b className="text-blue-500 hover:underline">
-              porteirojosetrading@gmail.com
+            comunique-se com nois{" "}
+            <b className="text-orange-400 hover:underline">
+              <i>porteirojosetrading@gmail.com</i>
             </b>
+            ;
+            <br />
+            ou no X: <i className="hover:underline">@vovonacci</i>
           </p>
         </div>
         <div className="mt-2 py-2 border-t border-gray-400">
           <ul>
             {posts.map((post) => (
-              <li key={post.slug} className="mb-2">
+              <li key={post.slug} className="mb-2 ">
                 <a
                   href={`/blog/${post.slug}`}
-                  className="text-orange-400 text-lg hover:underline"
+                  className="text-indigo-500 hover:text-cyan-600 text-lg"
                 >
                   {post.title}
                 </a>{" "}
