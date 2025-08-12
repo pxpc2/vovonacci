@@ -38,6 +38,12 @@ export default function Home() {
             ;
             <br />
             ou no X: <i className="hover:underline">@vovonacci</i>
+            <br />
+            <br />
+            <i className="font-bold">
+              AMERICANS: dates are formatted in DD/MM/YYYY because I am
+              brazilian, thanks
+            </i>
           </p>
         </div>
         <div className="mt-2 py-2 border-t border-gray-400">
@@ -46,7 +52,7 @@ export default function Home() {
               <li key={post.slug} className="mb-2 ">
                 <a
                   href={`/blog/${post.slug}`}
-                  className="text-indigo-500 hover:text-cyan-600 text-lg"
+                  className="text-indigo-500 hover:text-indigo-400 text-lg hover:underline"
                 >
                   {post.title}
                 </a>{" "}

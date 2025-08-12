@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@polygon.io/client-js": "^8.1.0",
     "@tailwindcss/typography": "^0.5.16",
     "github-markdown-css": "^5.8.1",
     "gray-matter": "^4.0.3",
