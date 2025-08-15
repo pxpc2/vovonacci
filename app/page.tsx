@@ -21,31 +21,27 @@ export default function Home() {
             <h1 className="text-2xl">vovonacci@PJT</h1>
           </Link>
         </div>
-        <div className="flex items-center justify-center font-light">
+        <div className="flex items-center  text-neutral-300 justify-center font-light">
           <p>
-            Vovonacci do Porteiro José Traders. Opero daytrade em mercados
-            futuros desde 2018, focando em futuros americanos desde 2023.
-            <br />
-            Aqui compartilho minhas preparações diárias/semanais, revisões de
-            pregão, e uns posts aleatórios de vez em nunca. <br /> Sinta-se à
-            vontade para explorar e entrar em contato em caso de possuir
-            perguntas. <br /> Nosso intuito aqui é puramente educativo, deve-se
-            lembrar. <br />
+            Sinta-se à vontade para explorar e entrar em contato em caso de
+            possuir perguntas. Nosso intuito aqui é puramente educativo, deve-se
+            lembrar.
             <br />
             comunique-se com nois{" "}
             <b className="text-orange-400 hover:underline">
               <i>porteirojosetrading@gmail.com</i>
             </b>
-            ;
+            ; ou no X: <i className="hover:underline">@vovonacci</i>.
             <br />
-            ou no X: <i className="hover:underline">@vovonacci</i>
-            <br />
-            <br />
-            <i className="font-bold">
-              AMERICANS: dates are formatted in DD/MM/YYYY because I am
-              brazilian, thanks
-            </i>
           </p>
+        </div>
+        <div className="flex items-center justify-center mt-2">
+          <Link
+            href="/quant"
+            className="px-4 py-2 bg-indigo-600 font-semibold hover:bg-indigo-500 text-white rounded-md shadow-md transition"
+          >
+            area QUANT
+          </Link>
         </div>
         <div className="mt-2 py-2 border-t border-gray-400">
           <ul>

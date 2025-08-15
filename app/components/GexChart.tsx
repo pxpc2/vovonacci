@@ -95,7 +95,7 @@ export default function GexMassChart({
     );
   }
   return (
-    <div className="w-full h-[520px] rounded-2xl p-4 shadow border border-neutral-800/60 bg-[var(--background)]">
+    <div className="w-full h-[520px] rounded-2xl p-4 py-6 shadow border border-neutral-800/60 bg-[var(--background)]">
       <div className="text-sm font-medium mb-2" style={{ color: fg }}>
         {title}
       </div>
@@ -111,7 +111,7 @@ export default function GexMassChart({
           <XAxis
             type="number"
             domain={["auto", "auto"]}
-            tick={{ fill: fg, fontSize: 12 }}
+            tick={{ fill: fg, fontSize: 16 }}
             axisLine={{ stroke: grid }}
             tickLine={{ stroke: grid }}
             tickFormatter={fmt}
@@ -120,8 +120,8 @@ export default function GexMassChart({
           <YAxis
             type="category"
             dataKey="strike"
-            width={88}
-            tick={{ fill: fg, fontSize: 12 }}
+            width={25}
+            tick={{ fill: fg, fontSize: 16 }}
             axisLine={{ stroke: grid }}
             tickLine={{ stroke: grid }}
             tickMargin={6}
@@ -131,8 +131,8 @@ export default function GexMassChart({
           <Tooltip content={<MassTooltip />} />
           <Legend wrapperStyle={{ color: fg }} />
 
-          <Bar dataKey="call" name="Call mass" fill={green} barSize={10} />
-          <Bar dataKey="put" name="Put mass" fill={red} barSize={10} />
+          <Bar dataKey="call" name="Call gamma" fill={green} barSize={10} />
+          <Bar dataKey="put" name="Put gamma" fill={red} barSize={10} />
 
           {spot && (
             <ReferenceLine
