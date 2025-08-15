@@ -27,23 +27,26 @@ export default function Page() {
 
   useEffect(() => {
     (async () => {
-      const res = await getMassForCharts("I:SPX", 6465);
+      const res = await getMassForCharts("I:SPX");
       setData(res);
     })();
   }, []);
 
+  // log com HVL
   useEffect(() => {
     if (!data?.levels) return;
-    const { callResistance, putSupport, zeroDTE } = data.levels;
+    const { callResistance, putSupport, hvl, zeroDTE } = data.levels;
     console.log("[NÍVEIS GAMMA - TODAS EXPIRAÇÕES]", {
       CR: callResistance,
       PS: putSupport,
+      HVL: hvl,
     });
     if (zeroDTE) {
       console.log("[NÍVEIS GAMMA - 0DTE]", {
         data: zeroDTE.expiry,
         CR0DTE: zeroDTE.callResistance,
         PS0DTE: zeroDTE.putSupport,
+        HVL0DTE: zeroDTE.hvl,
       });
     }
   }, [data?.levels]);
@@ -168,7 +171,7 @@ export default function Page() {
         <div className="px-10 flex items-center justify-between text-xs text-neutral-400">
           <div className="flex items-center gap-3">
             <span className="rounded-md border border-indigo-800/80 text-indigo-400 font-semibold px-2 py-0.5">
-              {"$SPX"}
+              {`$SPX - SPOT PRICE @ ${data.spot}`}
             </span>
             <span
               className={`rounded-md border px-2 py-0.5 ${regimeClass(
@@ -312,6 +315,7 @@ export default function Page() {
           </div>
         </div>
 
+        {/* Charts */}
         <div className=" w-full space-y-6 pb-10">
           <GexMassChart
             title="Call vs Put GEX — 0DTE"
@@ -319,6 +323,9 @@ export default function Page() {
             spot={data.spot}
             callResistance={data.levels.zeroDTE?.callResistance ?? undefined}
             putSupport={data.levels.zeroDTE?.putSupport ?? undefined}
+            hvl={data.levels.zeroDTE?.hvl ?? undefined}
+            normalizeBars={true} // << suaviza outliers no 0DTE
+            normalizeQuantile={0.9} // pode ajustar 0.85–0.95 conforme gosto
           />
           <GexMassChart
             title="Call vs Put GEX — todas as expirações"
@@ -326,6 +333,8 @@ export default function Page() {
             spot={data.spot}
             callResistance={data.levels.callResistance}
             putSupport={data.levels.putSupport}
+            hvl={data.levels.hvl}
+            normalizeBars={false} // mantém escala “real” nas todas
           />
         </div>
       </div>
