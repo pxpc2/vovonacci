@@ -1,0 +1,55 @@
+{
+  results: [
+    {
+      ticker: 'I:SPX',
+      name: "Standard & Poor's 500",
+      market: 'indices',
+      locale: 'us',
+      active: true,
+      source_feed: 'CboeGlobalIndicesMain'
+    },
+    {
+      ticker: 'I:SPXUIV',
+      name: 'PROSHARES ULTRAPRO SHORT SP500 ETF',
+      market: 'indices',
+      locale: 'us',
+      active: true,
+      source_feed: 'CboeGlobalIndicesINAV'
+    },
+    {
+      ticker: 'I:SPXTIV',
+      name: 'PROSHARES S&P 500 EX-TECHNOLOGY ETF',
+      market: 'indices',
+      locale: 'us',
+      active: true,
+      source_feed: 'CboeGlobalIndicesINAV'
+    },
+    {
+      ticker: 'I:SPXVIV',
+      name: 'PROSHARES S&P 500 EX-HEALTH CARE ETF',
+      market: 'indices',
+      locale: 'us',
+      active: true,
+      source_feed: 'CboeGlobalIndicesINAV'
+    },
+    {
+      ticker: 'I:SPXNIV',
+      name: 'PROSHARES S&P 500 EX-FINANCIALS ETF',
+      market: 'indices',
+      locale: 'us',
+      active: true,
+      source_feed: 'CboeGlobalIndicesINAV'
+    },
+    {
+      ticker: 'I:SPXEIV',
+      name: 'PROSHARES S&P 500 EX-ENERGY ETF',
+      market: 'indices',
+      locale: 'us',
+      active: true,
+      source_feed: 'CboeGlobalIndicesINAV'
+    }
+  ],
+  status: 'OK',
+  request_id: '4c7f91a70fdce431bedde8e518d3ff4d',
+  count: 6
+}
