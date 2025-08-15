@@ -5,15 +5,29 @@ import {
   GetOptionsChainSortEnum,
   restClient,
 } from "@polygon.io/client-js";
-import { buildNetCurves, summarizeCRPS } from "../../utils/math/gex-math";
-import { topPutMass } from "../../utils/math/gex-format";
+import { summarizeCRPS } from "../../utils/math/gex-math";
+import {
+  buildCallPutMass,
+  toMassBars,
+  topPutMass,
+} from "../../utils/math/gex-format";
+
+function nycTodayISO() {
+  const now = new Date();
+  const ny = new Date(
+    now.toLocaleString("en-US", { timeZone: "America/New_York" })
+  );
+  const y = ny.getFullYear();
+  const m = String(ny.getMonth() + 1).padStart(2, "0");
+  const d = String(ny.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
 
 export async function getOptionsChain(ticker: string) {
-  const globalFetchOptions = { pagination: true };
   const rest = restClient(
     process.env.POLY_API_KEY as string,
     "https://api.polygon.io",
-    globalFetchOptions
+    { pagination: true }
   );
 
   const response = await rest.getOptionsChain(
@@ -34,7 +48,6 @@ export async function getOptionsChain(ticker: string) {
     GetOptionsChainSortEnum.ExpirationDate
   );
 
-  // keep only rows with valid gamma
   return (response.results ?? [])
     .filter((c) => Number.isFinite(c.greeks?.gamma) && c.greeks?.gamma !== 0)
     .map((c) => ({
@@ -43,36 +56,38 @@ export async function getOptionsChain(ticker: string) {
       expiry: c.details?.expiration_date,
       strike: c.details?.strike_price,
       oi: c.open_interest ?? 0,
-      gamma: c.greeks?.gamma ?? null,
+      gamma: c.greeks?.gamma as number,
       iv: c.implied_volatility ?? null,
     }));
 }
 
-export async function getCRPSSummary(ticker = "I:SPX", S = 6465) {
+export async function getMassForCharts(ticker = "I:SPX", S = 6465) {
   const rows = await getOptionsChain(ticker);
-  return summarizeCRPS(rows as any, S);
-}
 
-export async function getGexForCharts(ticker = "I:SPX", S = 6465) {
-  const rows = await getOptionsChain(ticker); // already filtered for finite gamma
+  const today = nycTodayISO();
+  const expiries = [...new Set(rows.map((r) => r.expiry))].sort();
+  const zeroDteExpiry = expiries.find((e) => e >= today) ?? null;
 
-  const crps = summarizeCRPS(rows as any, S, {
-    spotWindow0: 0.05,
-    minOI0: 10,
-    binStep0: 25,
-  });
-  const curves = buildNetCurves(rows as any, S, {
-    spotWindow0: 0.05,
-    minOI0: 10,
-  });
+  const levels = summarizeCRPS(rows as any, S).levels;
 
-  const zeroExp = crps.levels.zeroDTE?.expiry ?? null;
-  const debug = zeroExp ? topPutMass(rows as any, zeroExp, S, 10) : [];
+  const allMass = buildCallPutMass(rows as any, S);
+  const dteMass = zeroDteExpiry
+    ? buildCallPutMass(rows as any, S, {
+        expiry: zeroDteExpiry,
+        spotWindow: 0.05,
+        minOI: 10,
+        binStep: 25,
+      })
+    : [];
 
   return {
     spot: S,
-    levels: crps.levels,
-    curves, // { netAll, net0dte, zeroDteExpiry }
-    debug, // [{strike, mass}] top 0DTE put mass (helps explain PS)
+    zeroDteExpiry,
+    levels,
+    massAllBars: toMassBars(allMass),
+    mass0Bars: toMassBars(dteMass),
+    debugTop0dtePut: zeroDteExpiry
+      ? topPutMass(rows as any, zeroDteExpiry, S, 12)
+      : [],
   };
 }

@@ -24,23 +24,12 @@ function binTo(x: number, step: number) {
   return Math.round(x / step) * step;
 }
 
-/**
- * rows: [{ type:'call'|'put', expiry:'YYYY-MM-DD', strike:number, oi:number, gamma:number }]
- * S: spot used for $GEX = gamma * S^2 * 0.01 * 100
- * opts (optional): { spotWindow0?: number, minOI0?: number, binStep0?: number }
- */
-export function summarizeCRPS(
-  rows: any[],
-  S: number,
-  opts: { spotWindow0?: number; minOI0?: number; binStep0?: number } = {}
-) {
+export function summarizeCRPS(rows: any[], S: number) {
   const MULT = 100;
   const pctMove = 0.01;
-
-  // default “MenthorQ-ish” 0DTE sanitizers
   const spotWindow0 = 0.05;
   const minOI0 = 10; // ignore tiny OI on 0DTE
-  const binStep0 = 5; // bin 0DTE strikes to 25-pt grid
+  const binStep0 = 5; // bin 0DTE strikes to 5-pt grid
 
   const today = nycTodayISO();
   const expiries = [...new Set(rows.map((r) => r.expiry))].sort();
@@ -53,20 +42,18 @@ export function summarizeCRPS(
 
   for (const r of rows) {
     const gexUnit = r.gamma * (S * S) * pctMove * MULT;
-    const contrib = Math.abs(gexUnit * r.oi); // magnitude only
+    const contrib = Math.abs(gexUnit * r.oi);
 
-    // --- all expiries (unchanged) ---
     if (r.type === "call") {
       callMassAll.set(r.strike, (callMassAll.get(r.strike) ?? 0) + contrib);
     } else {
       putMassAll.set(r.strike, (putMassAll.get(r.strike) ?? 0) + contrib);
     }
 
-    // --- 0DTE only: apply light sanitation + binning ---
     if (r.expiry === zeroDteExpiry) {
-      if ((r.oi ?? 0) < minOI0) continue; // tiny OI: skip
-      if (Math.abs(r.strike - S) / S > spotWindow0) continue; // too far from spot: skip
-      const bStrike = binTo(r.strike, binStep0); // cluster to 25-pt grid
+      if ((r.oi ?? 0) < minOI0) continue;
+      if (Math.abs(r.strike - S) / S > spotWindow0) continue;
+      const bStrike = binTo(r.strike, binStep0);
 
       if (r.type === "call") {
         callMass0.set(bStrike, (callMass0.get(bStrike) ?? 0) + contrib);
@@ -89,7 +76,6 @@ export function summarizeCRPS(
   };
 }
 
-/** Build net GEX curves (no HVL), using same 0DTE sanitizers you use for CR/PS. */
 export function buildNetCurves(
   rows: any[],
   S: number,
@@ -97,7 +83,7 @@ export function buildNetCurves(
 ) {
   const MULT = 100;
   const pctMove = 0.01;
-  const spotWindow0 = opts.spotWindow0 ?? 0.08; // ±8%
+  const spotWindow0 = opts.spotWindow0 ?? 0.08;
   const minOI0 = opts.minOI0 ?? 10;
 
   const today = nycTodayISO();
@@ -109,13 +95,11 @@ export function buildNetCurves(
 
   for (const r of rows) {
     const sign = r.type === "call" ? +1 : -1;
-    const gexUnit = r.gamma * (S * S) * pctMove * MULT; // $/1%
+    const gexUnit = r.gamma * (S * S) * pctMove * MULT;
     const contrib = gexUnit * r.oi;
 
-    // all expiries
     netAll.set(r.strike, (netAll.get(r.strike) ?? 0) + sign * contrib);
 
-    // 0DTE subset with a light sanity window
     if (
       zeroDteExpiry &&
       r.expiry === zeroDteExpiry &&
