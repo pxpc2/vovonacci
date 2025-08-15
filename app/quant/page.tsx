@@ -147,7 +147,6 @@ export default function Page() {
             </Link>
           </div>
           <div className="flex flex-col items-center justify-center p-6 gap-3 text-neutral-300">
-            <div className="text-sm">calculando...</div>
             <Spinner />
           </div>
         </div>
@@ -304,7 +303,7 @@ export default function Page() {
                         r.dom === "CALL" ? "text-emerald-400" : "text-red-400"
                       }`}
                     >
-                      ({r.dom} dom)
+                      ({r.dom})
                     </span>
                   </span>
                 </li>
