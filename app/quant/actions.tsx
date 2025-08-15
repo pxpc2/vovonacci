@@ -5,75 +5,74 @@ import {
   GetOptionsChainSortEnum,
   restClient,
 } from "@polygon.io/client-js";
+import { buildNetCurves, summarizeCRPS } from "../../utils/math/gex-math";
+import { topPutMass } from "../../utils/math/gex-format";
 
 export async function getOptionsChain(ticker: string) {
-  const globalFetchOptions = {
-    pagination: true,
-  };
+  const globalFetchOptions = { pagination: true };
   const rest = restClient(
     process.env.POLY_API_KEY as string,
     "https://api.polygon.io",
     globalFetchOptions
   );
-  try {
-    const response = await rest.getOptionsChain(
-      ticker,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      GetOptionsChainOrderEnum.Asc,
-      250,
-      GetOptionsChainSortEnum.ExpirationDate,
-      undefined
-    );
-    const now = Date.now();
-    const MAX_DTE = 365; // max 1 year
-    const MAX_STRIKE_DISTANCE = 0.5; // 50% above/below spot
-    const MIN_OI = 5; // tiny liquidity floor (tweak)
-    const spotPrice = 6465; // PEGAR AUTOMATICO DEPOIS!!!!
 
-    const filtered = (response.results ?? [])
-      // 1) expiry & strike window
-      .filter((c) => {
-        const e = c.details?.expiration_date;
-        const dte = e ? Math.floor((Date.parse(e) - now) / 86400000) : null;
-        if (dte == null || dte < 0 || dte > MAX_DTE) return false;
+  const response = await rest.getOptionsChain(
+    ticker,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    GetOptionsChainOrderEnum.Asc,
+    250,
+    GetOptionsChainSortEnum.ExpirationDate
+  );
 
-        const strike = c.details?.strike_price ?? 0;
-        const pctDiff = Math.abs(strike - spotPrice) / spotPrice;
-        if (pctDiff > MAX_STRIKE_DISTANCE) return false;
+  // keep only rows with valid gamma
+  return (response.results ?? [])
+    .filter((c) => Number.isFinite(c.greeks?.gamma) && c.greeks?.gamma !== 0)
+    .map((c) => ({
+      ticker: c.details?.ticker,
+      type: c.details?.contract_type,
+      expiry: c.details?.expiration_date,
+      strike: c.details?.strike_price,
+      oi: c.open_interest ?? 0,
+      gamma: c.greeks?.gamma ?? null,
+      iv: c.implied_volatility ?? null,
+    }));
+}
 
-        return true;
-      })
-      // 2) drop contracts with missing/zero gamma or low OI
-      .filter((c) => {
-        const gamma = c.greeks?.gamma;
-        const oi = c.open_interest ?? 0;
-        return Number.isFinite(gamma) && gamma !== 0 && oi >= MIN_OI;
-      })
-      // 3) (optional) trim fields so you don’t ship a huge object
-      .map((c) => ({
-        ticker: c.details?.ticker,
-        type: c.details?.contract_type,
-        expiry: c.details?.expiration_date,
-        strike: c.details?.strike_price,
-        oi: c.open_interest ?? 0,
-        gamma: c.greeks?.gamma ?? null,
-        iv: c.implied_volatility ?? null, // IV shows up in either place
-      }));
+export async function getCRPSSummary(ticker = "I:SPX", S = 6465) {
+  const rows = await getOptionsChain(ticker);
+  return summarizeCRPS(rows as any, S);
+}
 
-    console.log(`${filtered.length} contracts after filtering`);
-    return filtered;
-  } catch (e) {
-    console.error("An error happened:", e);
-    throw e;
-  }
+export async function getGexForCharts(ticker = "I:SPX", S = 6465) {
+  const rows = await getOptionsChain(ticker); // already filtered for finite gamma
+
+  const crps = summarizeCRPS(rows as any, S, {
+    spotWindow0: 0.05,
+    minOI0: 10,
+    binStep0: 25,
+  });
+  const curves = buildNetCurves(rows as any, S, {
+    spotWindow0: 0.05,
+    minOI0: 10,
+  });
+
+  const zeroExp = crps.levels.zeroDTE?.expiry ?? null;
+  const debug = zeroExp ? topPutMass(rows as any, zeroExp, S, 10) : [];
+
+  return {
+    spot: S,
+    levels: crps.levels,
+    curves, // { netAll, net0dte, zeroDteExpiry }
+    debug, // [{strike, mass}] top 0DTE put mass (helps explain PS)
+  };
 }
