@@ -114,7 +114,7 @@ export default function GexMassChart({
         {title}
       </div>
 
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" className={"pb-10"}>
         <ComposedChart
           data={sorted}
           layout="vertical"
@@ -143,7 +143,6 @@ export default function GexMassChart({
             interval="preserveStartEnd"
           />
           <Tooltip content={<MassTooltip />} />
-          <Legend wrapperStyle={{ color: fg }} />
 
           {/* calls = green, puts = red */}
           <Bar dataKey="call" name="Call gamma" fill={green} barSize={10} />
@@ -153,7 +152,7 @@ export default function GexMassChart({
             <ReferenceLine
               y={spot}
               stroke={neutral}
-              strokeDasharray="4 4"
+              strokeDasharray="2 4"
               label={labelProps(`Spot @ ${spot}`, fg)}
             />
           )}
