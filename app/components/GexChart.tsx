@@ -11,7 +11,7 @@ import {
   CartesianGrid,
   Legend,
 } from "recharts";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 
 export default function GexMassChart({
   title,
@@ -30,8 +30,8 @@ export default function GexMassChart({
 }) {
   const fg = "var(--foreground)";
   const grid = "rgba(237,237,237,0.15)";
-  const green = "#22c55e";
-  const red = "#ef4444";
+  const green = "#22c55e"; // CALL gamma
+  const red = "#ef4444"; // PUT  gamma
   const amber = "#f59e0b";
   const neutral = "#a3a3a3";
 
@@ -76,6 +76,7 @@ export default function GexMassChart({
     const call = d.call ?? 0;
     const put = d.put ?? 0;
     const net = call + put;
+
     return (
       <div
         style={{
@@ -87,13 +88,13 @@ export default function GexMassChart({
         }}
       >
         <div style={{ fontWeight: 600, marginBottom: 6 }}>{d.strike}</div>
-        <div style={{ color: red }}>Call GEX: {fmtBig(Math.abs(call))}</div>
-        <div style={{ color: green }}>Put GEX: {fmtBig(Math.abs(put))}</div>
+        <div style={{ color: green }}>Call GEX: {fmtBig(Math.abs(call))}</div>
+        <div style={{ color: red }}>Put GEX: {fmtBig(Math.abs(put))}</div>
         <div
           style={{ marginTop: 6, borderTop: "1px solid #333", paddingTop: 6 }}
         >
           Net GEX:{" "}
-          <span style={{ color: net >= 0 ? red : green }}>{fmtBig(net)}</span>
+          <span style={{ color: net >= 0 ? green : red }}>{fmtBig(net)}</span>
         </div>
       </div>
     );
@@ -144,8 +145,9 @@ export default function GexMassChart({
           <Tooltip content={<MassTooltip />} />
           <Legend wrapperStyle={{ color: fg }} />
 
-          <Bar dataKey="call" name="Call gamma" fill={red} barSize={10} />
-          <Bar dataKey="put" name="Put gamma" fill={green} barSize={10} />
+          {/* calls = green, puts = red */}
+          <Bar dataKey="call" name="Call gamma" fill={green} barSize={10} />
+          <Bar dataKey="put" name="Put gamma" fill={red} barSize={10} />
 
           {spot && (
             <ReferenceLine
@@ -160,8 +162,8 @@ export default function GexMassChart({
             <ReferenceLine
               y={callResistance as number}
               stroke={amber}
-              strokeDasharray="6 3"
-              strokeWidth={1.25}
+              strokeDasharray="2 4"
+              strokeWidth={0.5}
               label={labelProps(
                 `PS / CR @ ${(callResistance as number) || ""}`,
                 amber
@@ -173,8 +175,8 @@ export default function GexMassChart({
                 <ReferenceLine
                   y={callResistance}
                   stroke={red}
-                  strokeDasharray="6 3"
-                  strokeWidth={1.25}
+                  strokeDasharray="2 4"
+                  strokeWidth={0.5}
                   label={labelProps(`CR @ ${callResistance}`, red)}
                 />
               )}
@@ -182,8 +184,8 @@ export default function GexMassChart({
                 <ReferenceLine
                   y={putSupport}
                   stroke={green}
-                  strokeDasharray="6 3"
-                  strokeWidth={1.25}
+                  strokeDasharray="2 4"
+                  strokeWidth={0.5}
                   label={labelProps(`PS @ ${putSupport}`, green)}
                 />
               )}
