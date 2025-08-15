@@ -12,16 +12,66 @@ import {
   topPutMass,
 } from "../../utils/math/gex-format";
 
-function nycTodayISO() {
-  const now = new Date();
+/* ---- helpers ---- */
+
+// ns -> ms, tolerant of string/number
+function nsToMs(ns: unknown): number | null {
+  if (ns == null) return null;
+  try {
+    return Number(BigInt(ns as any) / BigInt(1000000));
+  } catch {
+    const s = String(ns);
+    return s.length >= 13 ? Number(s.slice(0, 13)) : null;
+  }
+}
+
+// find the freshest timestamp across common fields
+function computeAsOfMs(results: any[]): number {
+  let maxNs = BigInt(0);
+
+  for (const s of results ?? []) {
+    const day = s?.day ?? {};
+    const q = s?.last_quote ?? {};
+    const tr = s?.last_trade ?? {};
+
+    const cands = [
+      day?.last_updated,
+      q?.["sip_timestamp"] ??
+        q?.["timestamp"] ??
+        q?.["t"] ??
+        q?.["last_updated"],
+      tr?.["sip_timestamp"] ??
+        tr?.["timestamp"] ??
+        tr?.["t"] ??
+        tr?.["last_updated"],
+    ].filter(Boolean);
+
+    for (const t of cands) {
+      try {
+        const bn = BigInt(t as any);
+        if (bn > maxNs) maxNs = bn;
+      } catch {
+        /* ignore bad values */
+      }
+    }
+  }
+
+  return maxNs ? Number(maxNs / BigInt(1000000)) : Date.now();
+}
+
+// YYYY-MM-DD in New York for a given ms epoch
+function nycISOFromMs(ms: number) {
+  const d = new Date(ms);
   const ny = new Date(
-    now.toLocaleString("en-US", { timeZone: "America/New_York" })
+    d.toLocaleString("en-US", { timeZone: "America/New_York" })
   );
   const y = ny.getFullYear();
   const m = String(ny.getMonth() + 1).padStart(2, "0");
-  const d = String(ny.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
+  const dd = String(ny.getDate()).padStart(2, "0");
+  return `${y}-${m}-${dd}`;
 }
+
+/* ---- API functions ---- */
 
 export async function getOptionsChain(ticker: string) {
   const rest = restClient(
@@ -48,7 +98,12 @@ export async function getOptionsChain(ticker: string) {
     GetOptionsChainSortEnum.ExpirationDate
   );
 
-  return (response.results ?? [])
+  const results = response.results ?? [];
+
+  // NEW: compute dataset timestamp
+  const asOfMs = computeAsOfMs(results);
+
+  const rows = results
     .filter((c) => Number.isFinite(c.greeks?.gamma) && c.greeks?.gamma !== 0)
     .map((c) => ({
       ticker: c.details?.ticker,
@@ -59,12 +114,16 @@ export async function getOptionsChain(ticker: string) {
       gamma: c.greeks?.gamma as number,
       iv: c.implied_volatility ?? null,
     }));
+
+  // minimal change: return rows + timestamp
+  return { rows, asOfMs };
 }
 
 export async function getMassForCharts(ticker = "I:SPX", S = 6465) {
-  const rows = await getOptionsChain(ticker);
+  const { rows, asOfMs } = await getOptionsChain(ticker);
 
-  const today = nycTodayISO();
+  // Use the dataset time (ET) to decide "today" for 0DTE
+  const today = nycISOFromMs(asOfMs);
   const expiries = [...new Set(rows.map((r) => r.expiry))].sort();
   const zeroDteExpiry = expiries.find((e) => e >= today) ?? null;
 
@@ -82,6 +141,11 @@ export async function getMassForCharts(ticker = "I:SPX", S = 6465) {
 
   return {
     spot: S,
+    // NEW: surface timestamps so you can display them in the UI
+    asOfMs,
+    asOfET: new Date(asOfMs).toLocaleString("en-US", {
+      timeZone: "America/New_York",
+    }),
     zeroDteExpiry,
     levels,
     massAllBars: toMassBars(allMass),

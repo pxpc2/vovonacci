@@ -13,6 +13,15 @@ function fmtBig(n: number) {
   return (s * v).toLocaleString();
 }
 
+function fmtTZ(ms: number | undefined, locale: string, timeZone: string) {
+  if (!ms) return "—";
+  return new Intl.DateTimeFormat(locale, {
+    timeZone,
+    dateStyle: "short",
+    timeStyle: "medium",
+  }).format(new Date(ms));
+}
+
 export default function Page() {
   const [data, setData] = useState<any>(null);
 
@@ -20,7 +29,6 @@ export default function Page() {
     (async () => {
       const res = await getMassForCharts("I:SPX", 6465);
       setData(res);
-      console.log("Top 0DTE put mass:", res.debugTop0dtePut);
     })();
   }, []);
 
@@ -67,193 +75,214 @@ export default function Page() {
         .slice(0, 10);
 
     return {
-      // all expiries
       topPutsAll: rankPuts(barsAll),
       topCallsAll: rankCalls(barsAll),
       topNetAll: rankNet(barsAll),
       topGrossAll: rankGross(barsAll),
-      // 0DTE
       topPuts0: rankPuts(bars0),
       topCalls0: rankCalls(bars0),
     };
   }, [data]);
 
-  if (!data)
-    return (
-      <div className="w-full h-screen flex items-center justify-center p-6">
-        Carregando os dados...
-      </div>
-    );
+  // Brasília time string (BRT)
+  const asOfBR = useMemo(
+    () => fmtTZ(data?.asOfMs, "pt-BR", "America/Sao_Paulo"),
+    [data?.asOfMs]
+  );
 
-  return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <Link href="/" className="text-xl font-semibold hover:underline">
-          vovonacci@PJT
-        </Link>
-        <div className="text-sm text-gray-500">
-          data expiração 0DTE: {data.zeroDteExpiry ?? "—"}
+  if (!data) {
+    return (
+      <div className="relative min-h-screen">
+        <div className="absolute inset-0 bg-[url('/wp.png')] bg-cover bg-center bg-no-repeat opacity-15 z-0"></div>
+        <div className="relative z-10 font-sans flex flex-col gap-4 mx-12 sm:mx-32 h-full">
+          <div className="flex font-medium items-center justify-center pt-10 pb-8 border-b border-gray-400">
+            <Link href="/" className="hover:underline">
+              <h1 className="text-2xl">vovonacci@PJT</h1>
+            </Link>
+          </div>
+          <div className="flex items-center justify-center p-6">
+            Carregando os dados...
+          </div>
         </div>
       </div>
+    );
+  }
 
-      <div className="px-10 w-full space-y-6">
-        <GexMassChart
-          title="Call vs Put Mass — todas as expirações"
-          data={data.massAllBars}
-          spot={data.spot}
-          callResistance={data.levels.callResistance}
-          putSupport={data.levels.putSupport}
-        />
+  return (
+    <div className="relative min-h-screen">
+      {/* same background layer as Home */}
+      <div className="absolute inset-0 bg-[url('/wp.png')] bg-cover bg-center bg-no-repeat opacity-15 z-0"></div>
 
-        <GexMassChart
-          title="Call vs Put Mass — 0DTE"
-          data={data.mass0Bars}
-          spot={data.spot}
-          callResistance={data.levels.zeroDTE?.callResistance ?? undefined}
-          putSupport={data.levels.zeroDTE?.putSupport ?? undefined}
-        />
+      {/* same container / header as Home */}
+      <div className="relative z-10 font-sans flex flex-col gap-4 mx-12 sm:mx-32 h-full">
+        <div className="flex font-medium items-center justify-center pt-10 pb-8 border-b border-gray-400">
+          <Link href="/" className="hover:underline">
+            <h1 className="text-2xl">vovonacci@PJT</h1>
+          </Link>
+        </div>
 
-        {/* ======= All expiries: 4 columns ======= */}
-        {tables && (
-          <>
-            {/* ======= All expiries + 0DTE in one row ======= */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 pt-2">
-              {/* Call (all) */}
-              <div className="rounded-xl border border-neutral-800/60 p-4">
-                <div className="text-sm font-semibold text-center mb-3  text-neutral-200">
-                  CALL GEX <span className="text-neutral-500">(todas)</span>
-                </div>
-                <ul className="text-sm space-y-2">
-                  {tables.topCallsAll.map((r, i) => (
-                    <li key={i} className="flex items-center justify-between">
-                      <span className="text-indigo-400">{r.strike}</span>
-                      <span className="text-emerald-400 tabular-nums">
-                        {fmtBig(r.value)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+        {/* dataset meta (timestamp + 0DTE) */}
+        <div className="px-10 flex items-center justify-between text-xs text-neutral-400">
+          <div className="flex items-center gap-3">
+            <span className="rounded-md border border-neutral-800/60 px-2 py-0.5">
+              timestamp de coleta de dados (GMT-3): {asOfBR}
+            </span>
+            <span className="rounded-md border border-neutral-800/60 px-2 py-0.5">
+              0DTE: {data.zeroDteExpiry ?? "—"}
+            </span>
+          </div>
+        </div>
 
-              {/* Put (all) */}
-              <div className="rounded-xl border border-neutral-800/60 p-4">
-                <div className="text-sm font-semibold text-center mb-3  text-neutral-200">
-                  PUT GEX <span className="text-neutral-500">(todas)</span>
-                </div>
-                <ul className="text-sm space-y-2">
-                  {tables.topPutsAll.map((r, i) => (
-                    <li key={i} className="flex items-center justify-between">
-                      <span className="text-indigo-400">{r.strike}</span>
-                      <span className="text-red-400 tabular-nums">
-                        {fmtBig(r.value)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Call (0DTE) */}
-              <div className="rounded-xl border border-neutral-800/60 p-4">
-                <div className="text-sm font-semibold text-center mb-3  text-neutral-200">
-                  CALL GEX <span className="text-neutral-500">(0DTE)</span>
-                </div>
-                <ul className="text-sm space-y-2">
-                  {(tables.topCalls0?.length ? tables.topCalls0 : []).map(
-                    (r, i) => (
-                      <li key={i} className="flex items-center justify-between">
-                        <span className="text-indigo-400">{r.strike}</span>
-                        <span className="text-emerald-400 tabular-nums">
-                          {fmtBig(r.value)}
-                        </span>
-                      </li>
-                    )
-                  )}
-                  {!tables.topCalls0?.length && (
-                    <li className="text-neutral-500 text-sm text-center">
-                      sem dados 0DTE
-                    </li>
-                  )}
-                </ul>
-              </div>
-
-              {/* Put (0DTE) */}
-              <div className="rounded-xl border border-neutral-800/60 p-4">
-                <div className="text-sm font-semibold text-center mb-3  text-neutral-200">
-                  PUT GEX <span className="text-neutral-500">(0DTE)</span>
-                </div>
-                <ul className="text-sm space-y-2">
-                  {(tables.topPuts0?.length ? tables.topPuts0 : []).map(
-                    (r, i) => (
-                      <li key={i} className="flex items-center justify-between">
-                        <span className="text-indigo-400">{r.strike}</span>
-                        <span className="text-red-400 tabular-nums">
-                          {fmtBig(r.value)}
-                        </span>
-                      </li>
-                    )
-                  )}
-                  {!tables.topPuts0?.length && (
-                    <li className="text-neutral-500 text-sm text-center">
-                      sem dados 0DTE
-                    </li>
-                  )}
-                </ul>
-              </div>
-
-              {/* Net (all) */}
-              <div className="rounded-xl border border-neutral-800/60 p-4">
-                <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
-                  NET GEX <span className="text-neutral-500">(todas)</span>
-                </div>
-                <ul className="text-sm space-y-2">
-                  {tables.topNetAll.map((r, i) => (
-                    <li key={i} className="flex items-center justify-between">
-                      <span className="text-indigo-400">{r.strike}</span>
-                      <span
-                        className={`tabular-nums ${
-                          r.dom === "CALL" ? "text-emerald-400" : "text-red-400"
-                        }`}
-                      >
-                        {fmtBig(r.net)}{" "}
-                        <span className="text-xs text-neutral-400">
-                          ({r.dom})
-                        </span>
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Gross (all) */}
-              <div className="rounded-xl border border-neutral-800/60 p-4">
-                <div className="text-sm font-semibold text-center mb-3  text-neutral-200">
-                  TOTAL GEX <span className="text-neutral-500">(todas)</span>
-                </div>
-                <ul className="text-sm space-y-2">
-                  {tables.topGrossAll.map((r, i) => (
-                    <li key={i} className="flex items-center justify-between">
-                      <span className="text-indigo-400">{r.strike}</span>
-                      <span className="tabular-nums">
-                        <span className="text-neutral-300 mr-2">
-                          {fmtBig(r.total)}
-                        </span>
-                        <span
-                          className={`text-xs ${
-                            r.dom === "CALL"
-                              ? "text-emerald-400"
-                              : "text-red-400"
-                          }`}
-                        >
-                          ({r.dom} dom)
-                        </span>
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+        {/* Six ranking cards in one responsive row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 pt-2">
+          {/* CALL (all) */}
+          <div className="rounded-xl border border-neutral-800/60 p-4">
+            <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
+              CALL GEX <span className="text-neutral-500">(todas)</span>
             </div>
-          </>
-        )}
+            <ul className="text-sm space-y-2">
+              {tables!.topCallsAll.map((r, i) => (
+                <li key={i} className="flex items-center justify-between">
+                  <span className="text-indigo-400">{r.strike}</span>
+                  <span className="text-emerald-400 tabular-nums">
+                    {fmtBig(r.value)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* PUT (all) */}
+          <div className="rounded-xl border border-neutral-800/60 p-4">
+            <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
+              PUT GEX <span className="text-neutral-500">(todas)</span>
+            </div>
+            <ul className="text-sm space-y-2">
+              {tables!.topPutsAll.map((r, i) => (
+                <li key={i} className="flex items-center justify-between">
+                  <span className="text-indigo-400">{r.strike}</span>
+                  <span className="text-red-400 tabular-nums">
+                    {fmtBig(r.value)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* CALL (0DTE) */}
+          <div className="rounded-xl border border-neutral-800/60 p-4">
+            <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
+              CALL GEX <span className="text-neutral-500">(0DTE)</span>
+            </div>
+            <ul className="text-sm space-y-2">
+              {(tables!.topCalls0?.length ? tables!.topCalls0 : []).map(
+                (r, i) => (
+                  <li key={i} className="flex items-center justify-between">
+                    <span className="text-indigo-400">{r.strike}</span>
+                    <span className="text-emerald-400 tabular-nums">
+                      {fmtBig(r.value)}
+                    </span>
+                  </li>
+                )
+              )}
+              {!tables!.topCalls0?.length && (
+                <li className="text-neutral-500 text-sm text-center">
+                  sem dados 0DTE
+                </li>
+              )}
+            </ul>
+          </div>
+
+          {/* PUT (0DTE) */}
+          <div className="rounded-xl border border-neutral-800/60 p-4">
+            <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
+              PUT GEX <span className="text-neutral-500">(0DTE)</span>
+            </div>
+            <ul className="text-sm space-y-2">
+              {(tables!.topPuts0?.length ? tables!.topPuts0 : []).map(
+                (r, i) => (
+                  <li key={i} className="flex items-center justify-between">
+                    <span className="text-indigo-400">{r.strike}</span>
+                    <span className="text-red-400 tabular-nums">
+                      {fmtBig(r.value)}
+                    </span>
+                  </li>
+                )
+              )}
+              {!tables!.topPuts0?.length && (
+                <li className="text-neutral-500 text-sm text-center">
+                  sem dados 0DTE
+                </li>
+              )}
+            </ul>
+          </div>
+
+          {/* NET (all) */}
+          <div className="rounded-xl border border-neutral-800/60 p-4">
+            <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
+              NET GEX <span className="text-neutral-500">(todas)</span>
+            </div>
+            <ul className="text-sm space-y-2">
+              {tables!.topNetAll.map((r, i) => (
+                <li key={i} className="flex items-center justify-between">
+                  <span className="text-indigo-400">{r.strike}</span>
+                  <span
+                    className={`tabular-nums ${
+                      r.dom === "CALL" ? "text-emerald-400" : "text-red-400"
+                    }`}
+                  >
+                    {fmtBig(r.net)}{" "}
+                    <span className="text-xs text-neutral-400">({r.dom})</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* TOTAL (all) */}
+          <div className="rounded-xl border border-neutral-800/60 p-4">
+            <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
+              TOTAL GEX <span className="text-neutral-500">(todas)</span>
+            </div>
+            <ul className="text-sm space-y-2">
+              {tables!.topGrossAll.map((r, i) => (
+                <li key={i} className="flex items-center justify-between">
+                  <span className="text-indigo-400">{r.strike}</span>
+                  <span className="tabular-nums">
+                    <span className="text-neutral-300 mr-2">
+                      {fmtBig(r.total)}
+                    </span>
+                    <span
+                      className={`text-xs ${
+                        r.dom === "CALL" ? "text-emerald-400" : "text-red-400"
+                      }`}
+                    >
+                      ({r.dom} dom)
+                    </span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* Charts */}
+        <div className="px-10 w-full space-y-6 pb-10">
+          <GexMassChart
+            title="Call vs Put Mass — 0DTE"
+            data={data.mass0Bars}
+            spot={data.spot}
+            callResistance={data.levels.zeroDTE?.callResistance ?? undefined}
+            putSupport={data.levels.zeroDTE?.putSupport ?? undefined}
+          />
+          <GexMassChart
+            title="Call vs Put Mass — todas as expirações"
+            data={data.massAllBars}
+            spot={data.spot}
+            callResistance={data.levels.callResistance}
+            putSupport={data.levels.putSupport}
+          />
+        </div>
       </div>
     </div>
   );
