@@ -191,12 +191,12 @@ export default function GexMassChart({
     dataForChart.some((d: any) => typeof d.cumScaled === "number");
 
   return (
-    <div className="w-full h-[520px] rounded-2xl p-4 py-6 shadow border border-neutral-800/60 bg-[var(--background)]">
+    <div className="w-full h-[520px] rounded-2xl p-4 shadow border border-neutral-800/60 bg-[var(--background)]">
       <div className="text-sm font-medium mb-2" style={{ color: fg }}>
         {title}
       </div>
 
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" className={"pb-4"}>
         <ComposedChart
           data={dataForChart}
           layout="vertical"
@@ -225,7 +225,6 @@ export default function GexMassChart({
             interval="preserveStartEnd"
           />
           <Tooltip content={<MassTooltip />} />
-          <Legend wrapperStyle={{ color: fg }} />
 
           <Bar
             dataKey={normalizeBars ? "callPlot" : "call"}
@@ -247,7 +246,7 @@ export default function GexMassChart({
               stroke={purple}
               dot={false}
               strokeWidth={1} // HVL/curva mais fina
-              name="GEX profile"
+              name="Curva GEX"
             />
           )}
 
