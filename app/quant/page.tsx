@@ -27,45 +27,55 @@ export default function Page() {
   const tables = useMemo(() => {
     if (!data) return null;
 
-    // prefer 0DTE bars; fallback to all-exp
-    const bars: Array<{ strike: number; call: number; put: number }> =
-      (data.mass0Bars?.length ? data.mass0Bars : data.massAllBars) ?? [];
+    const barsAll: Array<{ strike: number; call: number; put: number }> =
+      data.massAllBars ?? [];
+    const bars0: Array<{ strike: number; call: number; put: number }> =
+      data.mass0Bars ?? [];
 
-    // 1) Top Puts (magnitude)
-    const topPuts = [...bars]
-      .filter((d) => d.put < 0)
-      .map((d) => ({ strike: d.strike, value: Math.abs(d.put) }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 10);
+    const rankPuts = (bars: typeof barsAll) =>
+      [...bars]
+        .filter((d) => d.put < 0)
+        .map((d) => ({ strike: d.strike, value: Math.abs(d.put) }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 10);
 
-    // 2) Top Calls (magnitude)
-    const topCalls = [...bars]
-      .filter((d) => d.call > 0)
-      .map((d) => ({ strike: d.strike, value: d.call }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 10);
+    const rankCalls = (bars: typeof barsAll) =>
+      [...bars]
+        .filter((d) => d.call > 0)
+        .map((d) => ({ strike: d.strike, value: d.call }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 10);
 
-    // 3) Top Net (|call + put|, with dominance)
-    const topNet = [...bars]
-      .map((d) => {
-        const net = d.call + d.put; // put is negative
-        return { strike: d.strike, net, dom: net >= 0 ? "CALL" : "PUT" };
-      })
-      .sort((a, b) => Math.abs(b.net) - Math.abs(a.net))
-      .slice(0, 10);
+    const rankNet = (bars: typeof barsAll) =>
+      [...bars]
+        .map((d) => {
+          const net = d.call + d.put; // put is negative
+          return { strike: d.strike, net, dom: net >= 0 ? "CALL" : "PUT" };
+        })
+        .sort((a, b) => Math.abs(b.net) - Math.abs(a.net))
+        .slice(0, 10);
 
-    // 4) Top Gross GEX (call + |put|)
-    const topGross = [...bars]
-      .map((d) => {
-        const putMag = Math.abs(d.put);
-        const total = d.call + putMag; // gross = call + |put|
-        const dom = d.call >= putMag ? "CALL" : "PUT";
-        return { strike: d.strike, total, dom, call: d.call, putMag };
-      })
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 10);
+    const rankGross = (bars: typeof barsAll) =>
+      [...bars]
+        .map((d) => {
+          const putMag = Math.abs(d.put);
+          const total = d.call + putMag; // call + |put|
+          const dom = d.call >= putMag ? "CALL" : "PUT";
+          return { strike: d.strike, total, dom, call: d.call, putMag };
+        })
+        .sort((a, b) => b.total - a.total)
+        .slice(0, 10);
 
-    return { topPuts, topCalls, topNet, topGross };
+    return {
+      // all expiries
+      topPutsAll: rankPuts(barsAll),
+      topCallsAll: rankCalls(barsAll),
+      topNetAll: rankNet(barsAll),
+      topGrossAll: rankGross(barsAll),
+      // 0DTE
+      topPuts0: rankPuts(bars0),
+      topCalls0: rankCalls(bars0),
+    };
   }, [data]);
 
   if (!data)
@@ -103,88 +113,146 @@ export default function Page() {
           putSupport={data.levels.zeroDTE?.putSupport ?? undefined}
         />
 
-        {/* ======= 4-column rankings ======= */}
+        {/* ======= All expiries: 4 columns ======= */}
         {tables && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pt-2">
-            {/* Top Put mass */}
-            <div className="rounded-xl border border-neutral-800/60 p-4">
-              <div className="text-sm font-semibold text-center mb-3 underline underline-offset-6 text-neutral-200">
-                PUT STRIKES GEX
-              </div>
-              <ul className="text-sm space-y-2">
-                {tables.topPuts.map((r, i) => (
-                  <li key={i} className="flex items-center justify-between">
-                    <span className="text-neutral-300">{r.strike}</span>
-                    <span className="text-red-400 tabular-nums">
-                      {fmtBig(r.value)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Top Call mass */}
-            <div className="rounded-xl border border-neutral-800/60 p-4">
-              <div className="text-sm font-semibold text-center mb-3 underline underline-offset-6 text-neutral-200">
-                CALL STRIKES GEX
-              </div>
-              <ul className="text-sm space-y-2">
-                {tables.topCalls.map((r, i) => (
-                  <li key={i} className="flex items-center justify-between">
-                    <span className="text-indigo-400">{r.strike}</span>
-                    <span className="text-emerald-400 tabular-nums">
-                      {fmtBig(r.value)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="rounded-xl border border-neutral-800/60 p-4">
-              <div className="text-sm font-semibold text-center mb-3 underline underline-offset-6 text-neutral-200">
-                NET GEX
-              </div>
-              <ul className="text-sm space-y-2">
-                {tables.topNet.map((r, i) => (
-                  <li key={i} className="flex items-center justify-between">
-                    <span className="text-indigo-400">{r.strike}</span>
-                    <span
-                      className={`tabular-nums ${
-                        r.dom === "CALL" ? "text-emerald-400" : "text-red-400"
-                      }`}
-                    >
-                      {fmtBig(r.net)}{" "}
-                      <span className="text-xs text-neutral-400">
-                        ({r.dom})
+          <>
+            {/* ======= All expiries + 0DTE in one row ======= */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 pt-2">
+              {/* Call (all) */}
+              <div className="rounded-xl border border-neutral-800/60 p-4">
+                <div className="text-sm font-semibold text-center mb-3  text-neutral-200">
+                  CALL GEX <span className="text-neutral-500">(todas)</span>
+                </div>
+                <ul className="text-sm space-y-2">
+                  {tables.topCallsAll.map((r, i) => (
+                    <li key={i} className="flex items-center justify-between">
+                      <span className="text-indigo-400">{r.strike}</span>
+                      <span className="text-emerald-400 tabular-nums">
+                        {fmtBig(r.value)}
                       </span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="rounded-xl border border-neutral-800/60 p-4">
-              <div className="text-sm font-semibold text-center mb-3 underline underline-offset-6 text-neutral-200">
-                TOTAL GEX
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <ul className="text-sm space-y-2">
-                {tables.topGross.map((r, i) => (
-                  <li key={i} className="flex items-center justify-between">
-                    <span className="text-indigo-400">{r.strike}</span>
-                    <span className="tabular-nums">
-                      <span className="text-neutral-400 mr-2">
-                        {fmtBig(r.total)}
+
+              {/* Put (all) */}
+              <div className="rounded-xl border border-neutral-800/60 p-4">
+                <div className="text-sm font-semibold text-center mb-3  text-neutral-200">
+                  PUT GEX <span className="text-neutral-500">(todas)</span>
+                </div>
+                <ul className="text-sm space-y-2">
+                  {tables.topPutsAll.map((r, i) => (
+                    <li key={i} className="flex items-center justify-between">
+                      <span className="text-indigo-400">{r.strike}</span>
+                      <span className="text-red-400 tabular-nums">
+                        {fmtBig(r.value)}
                       </span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              {/* optional: mini breakdown per row; uncomment if you want */}
-              {/* <div className="mt-2 text-xs text-neutral-400">
-                C {fmtBig(r.call)} · P {fmtBig(r.putMag)}
-              </div> */}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Call (0DTE) */}
+              <div className="rounded-xl border border-neutral-800/60 p-4">
+                <div className="text-sm font-semibold text-center mb-3  text-neutral-200">
+                  CALL GEX <span className="text-neutral-500">(0DTE)</span>
+                </div>
+                <ul className="text-sm space-y-2">
+                  {(tables.topCalls0?.length ? tables.topCalls0 : []).map(
+                    (r, i) => (
+                      <li key={i} className="flex items-center justify-between">
+                        <span className="text-indigo-400">{r.strike}</span>
+                        <span className="text-emerald-400 tabular-nums">
+                          {fmtBig(r.value)}
+                        </span>
+                      </li>
+                    )
+                  )}
+                  {!tables.topCalls0?.length && (
+                    <li className="text-neutral-500 text-sm text-center">
+                      sem dados 0DTE
+                    </li>
+                  )}
+                </ul>
+              </div>
+
+              {/* Put (0DTE) */}
+              <div className="rounded-xl border border-neutral-800/60 p-4">
+                <div className="text-sm font-semibold text-center mb-3  text-neutral-200">
+                  PUT GEX <span className="text-neutral-500">(0DTE)</span>
+                </div>
+                <ul className="text-sm space-y-2">
+                  {(tables.topPuts0?.length ? tables.topPuts0 : []).map(
+                    (r, i) => (
+                      <li key={i} className="flex items-center justify-between">
+                        <span className="text-indigo-400">{r.strike}</span>
+                        <span className="text-red-400 tabular-nums">
+                          {fmtBig(r.value)}
+                        </span>
+                      </li>
+                    )
+                  )}
+                  {!tables.topPuts0?.length && (
+                    <li className="text-neutral-500 text-sm text-center">
+                      sem dados 0DTE
+                    </li>
+                  )}
+                </ul>
+              </div>
+
+              {/* Net (all) */}
+              <div className="rounded-xl border border-neutral-800/60 p-4">
+                <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
+                  NET GEX <span className="text-neutral-500">(todas)</span>
+                </div>
+                <ul className="text-sm space-y-2">
+                  {tables.topNetAll.map((r, i) => (
+                    <li key={i} className="flex items-center justify-between">
+                      <span className="text-indigo-400">{r.strike}</span>
+                      <span
+                        className={`tabular-nums ${
+                          r.dom === "CALL" ? "text-emerald-400" : "text-red-400"
+                        }`}
+                      >
+                        {fmtBig(r.net)}{" "}
+                        <span className="text-xs text-neutral-400">
+                          ({r.dom})
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Gross (all) */}
+              <div className="rounded-xl border border-neutral-800/60 p-4">
+                <div className="text-sm font-semibold text-center mb-3  text-neutral-200">
+                  TOTAL GEX <span className="text-neutral-500">(todas)</span>
+                </div>
+                <ul className="text-sm space-y-2">
+                  {tables.topGrossAll.map((r, i) => (
+                    <li key={i} className="flex items-center justify-between">
+                      <span className="text-indigo-400">{r.strike}</span>
+                      <span className="tabular-nums">
+                        <span className="text-neutral-300 mr-2">
+                          {fmtBig(r.total)}
+                        </span>
+                        <span
+                          className={`text-xs ${
+                            r.dom === "CALL"
+                              ? "text-emerald-400"
+                              : "text-red-400"
+                          }`}
+                        >
+                          ({r.dom} dom)
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
-          </div>
+          </>
         )}
       </div>
     </div>
