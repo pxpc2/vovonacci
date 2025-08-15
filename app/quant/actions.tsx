@@ -135,7 +135,7 @@ export async function getMassForCharts(ticker = "I:SPX", S = 6465) {
         expiry: zeroDteExpiry,
         spotWindow: 0.05,
         minOI: 10,
-        binStep: 25,
+        binStep: 5,
       })
     : [];
 

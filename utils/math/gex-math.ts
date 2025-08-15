@@ -1,3 +1,5 @@
+// utils/math/gex-math.ts
+
 function nycTodayISO() {
   const now = new Date();
   const ny = new Date(
@@ -20,16 +22,31 @@ function argMax(map: Map<any, number>) {
   return bestK;
 }
 
-function binTo(x: number, step: number) {
-  return Math.round(x / step) * step;
+// binning helper with mode (default 'floor' to match SPX 25-pt walls)
+function binTo(
+  x: number,
+  step: number,
+  mode: "floor" | "round" | "ceil" = "floor"
+) {
+  if (mode === "round") return Math.round(x / step) * step;
+  if (mode === "ceil") return Math.ceil(x / step) * step;
+  return Math.floor(x / step) * step;
 }
 
+/**
+ * Resumo de Call/Put Support (todas expirações + 0DTE)
+ * rows: [{ type:'call'|'put', expiry:'YYYY-MM-DD', strike:number, oi:number, gamma:number }]
+ * S: spot usado em $GEX = gamma * S^2 * 0.01 * 100
+ */
 export function summarizeCRPS(rows: any[], S: number) {
   const MULT = 100;
   const pctMove = 0.01;
-  const spotWindow0 = 0.05;
-  const minOI0 = 10; // ignore tiny OI on 0DTE
-  const binStep0 = 5; // bin 0DTE strikes to 5-pt grid
+
+  // “sanitizers” p/ 0DTE
+  const spotWindow0 = 0.05; // +/- 5% do spot
+  const minOI0 = 10; // ignora OI muito pequeno
+  const binStep0 = 5; // <-- agora 25-pt grid (antes 5)
+  const binMode0 = "round" as const; // agrupar p/ baixo (6400, 6425, 6450, ...)
 
   const today = nycTodayISO();
   const expiries = [...new Set(rows.map((r) => r.expiry))].sort();
@@ -42,18 +59,21 @@ export function summarizeCRPS(rows: any[], S: number) {
 
   for (const r of rows) {
     const gexUnit = r.gamma * (S * S) * pctMove * MULT;
-    const contrib = Math.abs(gexUnit * r.oi);
+    const contrib = Math.abs(gexUnit * r.oi); // “massa” (sempre positiva)
 
+    // todas expirações (sem bin)
     if (r.type === "call") {
       callMassAll.set(r.strike, (callMassAll.get(r.strike) ?? 0) + contrib);
     } else {
       putMassAll.set(r.strike, (putMassAll.get(r.strike) ?? 0) + contrib);
     }
 
+    // 0DTE com janela + OI mínimo + binning consistente (5/floor)
     if (r.expiry === zeroDteExpiry) {
       if ((r.oi ?? 0) < minOI0) continue;
       if (Math.abs(r.strike - S) / S > spotWindow0) continue;
-      const bStrike = binTo(r.strike, binStep0);
+
+      const bStrike = binTo(r.strike, binStep0, binMode0); // 5
 
       if (r.type === "call") {
         callMass0.set(bStrike, (callMass0.get(bStrike) ?? 0) + contrib);
@@ -76,6 +96,10 @@ export function summarizeCRPS(rows: any[], S: number) {
   };
 }
 
+/**
+ * Curvas de GEX líquido (all + 0DTE) — útil se quiser plotar net GEX
+ * opts.spotWindow0 / minOI0 controlam o recorte de 0DTE para a curva
+ */
 export function buildNetCurves(
   rows: any[],
   S: number,
@@ -94,7 +118,7 @@ export function buildNetCurves(
   const net0 = new Map<number, number>();
 
   for (const r of rows) {
-    const sign = r.type === "call" ? +1 : -1;
+    const sign = r.type === "call" ? +1 : -1; // calls +, puts -
     const gexUnit = r.gamma * (S * S) * pctMove * MULT;
     const contrib = gexUnit * r.oi;
 
