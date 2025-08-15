@@ -3,6 +3,7 @@ import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { getMassForCharts } from "./actions";
 import GexMassChart from "../components/GexChart";
+import Spinner from "../components/Spinner";
 
 function fmtBig(n: number) {
   const s = Math.sign(n);
@@ -130,11 +131,12 @@ export default function Page() {
         <div className="relative z-10 font-sans flex flex-col gap-4 mx-12 sm:mx-32 h-full">
           <div className="flex font-medium items-center justify-center pt-10 pb-8 border-b border-gray-400">
             <Link href="/" className="hover:underline">
-              <h1 className="text-2xl">vovonacci@PJT</h1>
+              <h1 className="text-2xl">Vovonacci@PJT</h1>
             </Link>
           </div>
-          <div className="flex items-center justify-center p-6">
-            Carregando os dados...
+          <div className="flex flex-col items-center justify-center p-6 gap-3 text-neutral-300">
+            <div className="text-sm">calculando...</div>
+            <Spinner />
           </div>
         </div>
       </div>
@@ -148,7 +150,7 @@ export default function Page() {
       <div className="relative z-10 font-sans flex flex-col gap-4 mx-12 sm:mx-32 h-full">
         <div className="flex font-medium items-center justify-center pt-10 pb-8 border-b border-gray-400">
           <Link href="/" className="hover:underline">
-            <h1 className="text-2xl">vovonacci@PJT</h1>
+            <h1 className="text-2xl">Vovonacci@PJT</h1>
           </Link>
         </div>
 
