@@ -151,11 +151,11 @@ export default function GexMassChart({
             />
           )}
 
-          {/* CR / PS merge if same strike */}
+          {/* CR / PS JUNTA SE MESMO strike */}
           {equalLevel ? (
             <ReferenceLine
               y={callResistance as number}
-              stroke="#eab308" // amber to signal merged label; pick any neutral if you prefer
+              stroke="#eab308"
               strokeDasharray="6 3"
               label={{
                 value: `PS / CR @ ${callResistance}`,

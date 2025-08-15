@@ -1,4 +1,3 @@
-// app/quant/page.tsx
 "use client";
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
@@ -84,11 +83,45 @@ export default function Page() {
     };
   }, [data]);
 
-  // Brasília time string (BRT)
   const asOfBR = useMemo(
     () => fmtTZ(data?.asOfMs, "pt-BR", "America/Sao_Paulo"),
     [data?.asOfMs]
   );
+
+  const netAll = useMemo(
+    () =>
+      (data?.massAllBars ?? []).reduce(
+        (sum: number, d: any) => sum + (d.call || 0) + (d.put || 0),
+        0
+      ),
+    [data?.massAllBars]
+  );
+  const net0 = useMemo(
+    () =>
+      (data?.mass0Bars ?? []).reduce(
+        (sum: number, d: any) => sum + (d.call || 0) + (d.put || 0),
+        0
+      ),
+    [data?.mass0Bars]
+  );
+
+  const EPS = 0;
+
+  function regime(net: number) {
+    if (net > EPS) return "positiva";
+    if (net < -EPS) return "negativa";
+    return "neutra";
+  }
+
+  const regimeAll = regime(netAll);
+  //const regime0 = regime(net0); // É EXPOSICAO GAMMA 0DTE, NAO LEVO EM CONSIDERACAO
+
+  const regimeClass = (r: string) =>
+    r === "positiva"
+      ? "text-emerald-400 border-emerald-800/60"
+      : r === "negativa"
+      ? "text-red-400 border-red-800/60"
+      : "text-neutral-300 border-neutral-700/60";
 
   if (!data) {
     return (
@@ -110,10 +143,8 @@ export default function Page() {
 
   return (
     <div className="relative min-h-screen">
-      {/* same background layer as Home */}
       <div className="absolute inset-0 bg-[url('/wp.png')] bg-cover bg-center bg-no-repeat opacity-15 z-0"></div>
 
-      {/* same container / header as Home */}
       <div className="relative z-10 font-sans flex flex-col gap-4 mx-12 sm:mx-32 h-full">
         <div className="flex font-medium items-center justify-center pt-10 pb-8 border-b border-gray-400">
           <Link href="/" className="hover:underline">
@@ -124,6 +155,16 @@ export default function Page() {
         {/* dataset meta (timestamp + 0DTE) */}
         <div className="px-10 flex items-center justify-between text-xs text-neutral-400">
           <div className="flex items-center gap-3">
+            <span className="rounded-md border border-indigo-800/80 text-indigo-400 font-semibold px-2 py-0.5">
+              {"$SPX"}
+            </span>
+            <span
+              className={`rounded-md border px-2 py-0.5 ${regimeClass(
+                regimeAll
+              )}`}
+            >
+              exposição gamma: {regimeAll}
+            </span>
             <span className="rounded-md border border-neutral-800/60 px-2 py-0.5">
               timestamp de coleta de dados (GMT-3): {asOfBR}
             </span>
@@ -133,7 +174,6 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Six ranking cards in one responsive row */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 pt-2">
           {/* CALL (all) */}
           <div className="rounded-xl border border-neutral-800/60 p-4">
