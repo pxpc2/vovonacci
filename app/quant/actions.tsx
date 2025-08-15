@@ -5,73 +5,22 @@ import {
   GetOptionsChainSortEnum,
   restClient,
 } from "@polygon.io/client-js";
-import { summarizeCRPS } from "../../utils/math/gex-math";
 import {
   buildCallPutMass,
   toMassBars,
   topPutMass,
 } from "../../utils/math/gex-format";
 
-/* ---- helpers ---- */
-
-// ns -> ms, tolerant of string/number
-function nsToMs(ns: unknown): number | null {
-  if (ns == null) return null;
-  try {
-    return Number(BigInt(ns as any) / BigInt(1000000));
-  } catch {
-    const s = String(ns);
-    return s.length >= 13 ? Number(s.slice(0, 13)) : null;
-  }
-}
-
-// find the freshest timestamp across common fields
-function computeAsOfMs(results: any[]): number {
-  let maxNs = BigInt(0);
-
-  for (const s of results ?? []) {
-    const day = s?.day ?? {};
-    const q = s?.last_quote ?? {};
-    const tr = s?.last_trade ?? {};
-
-    const cands = [
-      day?.last_updated,
-      q?.["sip_timestamp"] ??
-        q?.["timestamp"] ??
-        q?.["t"] ??
-        q?.["last_updated"],
-      tr?.["sip_timestamp"] ??
-        tr?.["timestamp"] ??
-        tr?.["t"] ??
-        tr?.["last_updated"],
-    ].filter(Boolean);
-
-    for (const t of cands) {
-      try {
-        const bn = BigInt(t as any);
-        if (bn > maxNs) maxNs = bn;
-      } catch {
-        /* ignore bad values */
-      }
-    }
-  }
-
-  return maxNs ? Number(maxNs / BigInt(1000000)) : Date.now();
-}
-
-// YYYY-MM-DD in New York for a given ms epoch
-function nycISOFromMs(ms: number) {
-  const d = new Date(ms);
+function nycTodayISO() {
+  const now = new Date();
   const ny = new Date(
-    d.toLocaleString("en-US", { timeZone: "America/New_York" })
+    now.toLocaleString("en-US", { timeZone: "America/New_York" })
   );
   const y = ny.getFullYear();
   const m = String(ny.getMonth() + 1).padStart(2, "0");
-  const dd = String(ny.getDate()).padStart(2, "0");
-  return `${y}-${m}-${dd}`;
+  const d = String(ny.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
-
-/* ---- API functions ---- */
 
 export async function getOptionsChain(ticker: string) {
   const rest = restClient(
@@ -98,12 +47,7 @@ export async function getOptionsChain(ticker: string) {
     GetOptionsChainSortEnum.ExpirationDate
   );
 
-  const results = response.results ?? [];
-
-  // NEW: compute dataset timestamp
-  const asOfMs = computeAsOfMs(results);
-
-  const rows = results
+  return (response.results ?? [])
     .filter((c) => Number.isFinite(c.greeks?.gamma) && c.greeks?.gamma !== 0)
     .map((c) => ({
       ticker: c.details?.ticker,
@@ -113,24 +57,70 @@ export async function getOptionsChain(ticker: string) {
       oi: c.open_interest ?? 0,
       gamma: c.greeks?.gamma as number,
       iv: c.implied_volatility ?? null,
+      // carimbos crus (para asOfMs)
+      _dq: (c as any)?.day?.last_updated ?? undefined,
+      _lq: (c as any)?.last_quote?.sip_timestamp ?? undefined,
+      _lt: (c as any)?.last_trade?.sip_timestamp ?? undefined,
+      _gu: (c as any)?.greeks?.updated ?? undefined,
     }));
+}
 
-  // minimal change: return rows + timestamp
-  return { rows, asOfMs };
+// pega o maior carimbo em ns (ou ms) e normaliza para ms
+function chainAsOfMs(rows: any[]): number | undefined {
+  let maxNum = 0;
+  for (const r of rows) {
+    const cand = [r._dq, r._lq, r._lt, r._gu].map((x) =>
+      typeof x === "bigint" ? Number(x) : Number(x || 0)
+    );
+    const m = Math.max(...cand);
+    if (m > maxNum) maxNum = m;
+  }
+  return maxNum ? Math.floor(maxNum / 1e6) : undefined; // ns->ms (ou já ms)
+}
+
+// util: escolhe o strike com maior valor para uma chave
+function topStrikeBy<T extends { strike: number }>(
+  rows: (T & Record<string, number>)[],
+  key: keyof T & string
+): number | null {
+  if (!rows.length) return null;
+  let best = rows[0];
+  for (let i = 1; i < rows.length; i++) {
+    if ((rows[i] as any)[key] > (best as any)[key]) best = rows[i];
+  }
+  return best.strike ?? null;
 }
 
 export async function getMassForCharts(ticker = "I:SPX", S = 6465) {
-  const { rows, asOfMs } = await getOptionsChain(ticker);
+  const rows = await getOptionsChain(ticker);
 
-  // Use the dataset time (ET) to decide "today" for 0DTE
-  const today = nycISOFromMs(asOfMs);
+  const today = nycTodayISO();
   const expiries = [...new Set(rows.map((r) => r.expiry))].sort();
   const zeroDteExpiry = expiries.find((e) => e >= today) ?? null;
 
-  const levels = summarizeCRPS(rows as any, S).levels;
+  // ---------- filtros leves p/ “todas as expirações” ----------
+  const ALL_SPOT_WINDOW = 0.35; // ±35% do spot
+  const ALL_MIN_OI = 5;
+  const ALL_MAX_DTE = 365;
+  const ALL_BIN = 5; // mantém granularidade fina (5 pts)
 
-  const allMass = buildCallPutMass(rows as any, S);
-  const dteMass = zeroDteExpiry
+  const allMassRaw = buildCallPutMass(rows as any, S, {
+    spotWindow: ALL_SPOT_WINDOW,
+    minOI: ALL_MIN_OI,
+    binStep: ALL_BIN,
+    maxDteDays: ALL_MAX_DTE,
+  }); // [{strike, call, put}]
+  const allBars = toMassBars(allMassRaw); // para gráfico (put negativo)
+
+  // CR/PS “todas” saem do MESMO agregado da tabela
+  const crAll = topStrikeBy(allMassRaw, "call");
+  const psAll = topStrikeBy(
+    allMassRaw.map((r) => ({ ...r, put: Math.abs(r.put) })), // magnitude
+    "put"
+  );
+
+  // ---------- 0DTE (com sanitização leve + bin 5) ----------
+  const mass0Raw = zeroDteExpiry
     ? buildCallPutMass(rows as any, S, {
         expiry: zeroDteExpiry,
         spotWindow: 0.05,
@@ -138,18 +128,30 @@ export async function getMassForCharts(ticker = "I:SPX", S = 6465) {
         binStep: 5,
       })
     : [];
+  const mass0Bars = toMassBars(mass0Raw);
+
+  const cr0 = topStrikeBy(mass0Raw, "call");
+  const ps0 = topStrikeBy(
+    mass0Raw.map((r) => ({ ...r, put: Math.abs(r.put) })), // magnitude
+    "put"
+  );
 
   return {
     spot: S,
-    // NEW: surface timestamps so you can display them in the UI
-    asOfMs,
-    asOfET: new Date(asOfMs).toLocaleString("en-US", {
-      timeZone: "America/New_York",
-    }),
     zeroDteExpiry,
-    levels,
-    massAllBars: toMassBars(allMass),
-    mass0Bars: toMassBars(dteMass),
+    // níveis agora 100% consistentes com as tabelas/plots
+    levels: {
+      callResistance: crAll,
+      putSupport: psAll,
+      zeroDTE: {
+        expiry: zeroDteExpiry,
+        callResistance: cr0,
+        putSupport: ps0,
+      },
+    },
+    massAllBars: allBars,
+    mass0Bars,
+    asOfMs: chainAsOfMs(rows as any),
     debugTop0dtePut: zeroDteExpiry
       ? topPutMass(rows as any, zeroDteExpiry, S, 12)
       : [],

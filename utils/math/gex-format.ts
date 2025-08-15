@@ -42,23 +42,39 @@ export function buildCallPutMass(
   }>,
   S: number,
   opts: {
-    expiry?: string | null;
-    spotWindow?: number | null;
-    minOI?: number;
-    binStep?: number | null;
+    expiry?: string | null; // filtra uma expiração específica
+    spotWindow?: number | null; // janela em torno do spot (ex: 0.35 = ±35%)
+    minOI?: number; // piso de OI
+    binStep?: number | null; // agrega strikes por step (ex: 5)
+    maxDteDays?: number | null; // corta DTE muito longo (ex: 365)
   } = {}
 ) {
   const MULT = 100,
     pctMove = 0.01;
-  const { expiry = null, spotWindow = null, minOI = 0, binStep = null } = opts;
+  const {
+    expiry = null,
+    spotWindow = null,
+    minOI = 0,
+    binStep = null,
+    maxDteDays = null,
+  } = opts;
 
+  const now = Date.now();
   const m = new Map<number, { call: number; put: number }>();
 
   for (const r of rows) {
     if (expiry && r.expiry !== expiry) continue;
+
+    if (maxDteDays != null) {
+      const dte = Math.floor((Date.parse(r.expiry) - now) / 86_400_000); // dias
+      if (!Number.isFinite(dte) || dte < 0 || dte > maxDteDays) continue;
+    }
+
     if (minOI && (r.oi ?? 0) < minOI) continue;
+
     if (spotWindow != null && spotWindow >= 0) {
-      if (Math.abs(r.strike - S) / S > spotWindow) continue;
+      const far = Math.abs(r.strike - S) / S;
+      if (far > spotWindow) continue;
     }
 
     const strike = binStep
@@ -83,6 +99,6 @@ export function toMassBars(
   return arr.map((p) => ({
     strike: p.strike,
     call: p.call,
-    put: -p.put,
+    put: -p.put, // puts ficam negativas para split L/R no gráfico
   }));
 }
