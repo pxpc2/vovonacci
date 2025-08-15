@@ -11,6 +11,7 @@ import {
   CartesianGrid,
   Legend,
 } from "recharts";
+import { useEffect, useMemo } from "react";
 
 export default function GexMassChart({
   title,
@@ -27,7 +28,25 @@ export default function GexMassChart({
   putSupport?: number | null;
   yDescending?: boolean;
 }) {
-  if (!data || data.length === 0) {
+  const fg = "var(--foreground)";
+  const grid = "rgba(237,237,237,0.15)";
+  const green = "#22c55e";
+  const red = "#ef4444";
+  const amber = "#f59e0b";
+  const neutral = "#a3a3a3";
+
+  const merged =
+    callResistance != null &&
+    putSupport != null &&
+    callResistance === putSupport;
+
+  const sorted = useMemo(() => {
+    const arr = Array.isArray(data) ? data : [];
+    if (!arr.length) return [];
+    return yDescending ? [...arr].sort((a, b) => b.strike - a.strike) : arr;
+  }, [data, yDescending]);
+
+  if (!sorted.length) {
     return (
       <div className="w-full rounded-2xl p-4 border border-neutral-800/60 flex items-center justify-center text-sm text-neutral-400">
         {title}: sem dados
@@ -35,19 +54,10 @@ export default function GexMassChart({
     );
   }
 
-  const fg = "var(--foreground)";
-  const grid = "rgba(237,237,237,0.15)";
-  const green = "#22c55e"; // calls (direita)
-  const red = "#ef4444"; // puts (esquerda)
-
-  const fmt = (v: number) =>
+  const fmtAxis = (v: number) =>
     Math.abs(v) >= 1e9
       ? (v / 1e9).toFixed(1) + "B"
       : (v / 1e6).toFixed(1) + "M";
-
-  const sorted = yDescending
-    ? [...data].sort((a, b) => b.strike - a.strike)
-    : data;
 
   function fmtBig(n: number) {
     const v = Math.abs(n);
@@ -55,7 +65,8 @@ export default function GexMassChart({
     if (v >= 1e6) return (n / 1e6).toFixed(2) + "M";
     return n.toLocaleString();
   }
-  function MassTooltip({ active, payload, label }: any) {
+
+  function MassTooltip({ active, payload }: any) {
     if (!active || !payload?.length) return null;
     const d = payload[0].payload as {
       strike: number;
@@ -64,8 +75,7 @@ export default function GexMassChart({
     };
     const call = d.call ?? 0;
     const put = d.put ?? 0;
-    const net = call + put; // net GEX
-
+    const net = call + put;
     return (
       <div
         style={{
@@ -77,25 +87,26 @@ export default function GexMassChart({
         }}
       >
         <div style={{ fontWeight: 600, marginBottom: 6 }}>{d.strike}</div>
-        <div style={{ color: "#22c55e" }}>
-          Call GEX: {fmtBig(Math.abs(call))}
-        </div>
-        <div style={{ color: "#ef4444" }}>Put GEX: {fmtBig(Math.abs(put))}</div>
+        <div style={{ color: red }}>Call GEX: {fmtBig(Math.abs(call))}</div>
+        <div style={{ color: green }}>Put GEX: {fmtBig(Math.abs(put))}</div>
         <div
           style={{ marginTop: 6, borderTop: "1px solid #333", paddingTop: 6 }}
         >
           Net GEX:{" "}
-          <span style={{ color: net >= 0 ? "#22c55e" : "#ef4444" }}>
-            {fmtBig(net)}
-          </span>
+          <span style={{ color: net >= 0 ? red : green }}>{fmtBig(net)}</span>
         </div>
       </div>
     );
   }
-  const equalLevel =
-    callResistance != null &&
-    putSupport != null &&
-    Number(callResistance) === Number(putSupport);
+
+  const labelProps = (text: string, color: string) => ({
+    value: text,
+    position: "right" as const,
+    fill: color,
+    fontSize: 12,
+    dx: 6,
+  });
+
   return (
     <div className="w-full h-[520px] rounded-2xl p-4 py-6 shadow border border-neutral-800/60 bg-[var(--background)]">
       <div className="text-sm font-medium mb-2" style={{ color: fg }}>
@@ -116,7 +127,7 @@ export default function GexMassChart({
             tick={{ fill: fg, fontSize: 16 }}
             axisLine={{ stroke: grid }}
             tickLine={{ stroke: grid }}
-            tickFormatter={fmt}
+            tickFormatter={fmtAxis}
             tickMargin={8}
           />
           <YAxis
@@ -133,66 +144,47 @@ export default function GexMassChart({
           <Tooltip content={<MassTooltip />} />
           <Legend wrapperStyle={{ color: fg }} />
 
-          <Bar dataKey="call" name="Call gamma" fill={green} barSize={10} />
-          <Bar dataKey="put" name="Put gamma" fill={red} barSize={10} />
-          {/* SPOT */}
+          <Bar dataKey="call" name="Call gamma" fill={red} barSize={10} />
+          <Bar dataKey="put" name="Put gamma" fill={green} barSize={10} />
+
           {spot && (
             <ReferenceLine
               y={spot}
-              stroke="#a3a3a3"
+              stroke={neutral}
               strokeDasharray="4 4"
-              label={{
-                value: `Spot @ ${spot}`,
-                position: "right",
-                fill: fg,
-                fontSize: 12,
-                dx: 6,
-              }}
+              label={labelProps(`Spot @ ${spot}`, fg)}
             />
           )}
 
-          {/* CR / PS JUNTA SE MESMO strike */}
-          {equalLevel ? (
+          {merged ? (
             <ReferenceLine
               y={callResistance as number}
-              stroke="#eab308"
+              stroke={amber}
               strokeDasharray="6 3"
-              label={{
-                value: `PS / CR @ ${callResistance}`,
-                position: "right",
-                fill: fg,
-                fontSize: 12,
-                dx: 6,
-              }}
+              strokeWidth={1.25}
+              label={labelProps(
+                `PS / CR @ ${(callResistance as number) || ""}`,
+                amber
+              )}
             />
           ) : (
             <>
               {callResistance != null && (
                 <ReferenceLine
                   y={callResistance}
-                  stroke="#ef4444"
+                  stroke={red}
                   strokeDasharray="6 3"
-                  label={{
-                    value: `CR @ ${callResistance}`,
-                    position: "right",
-                    fill: fg,
-                    fontSize: 12,
-                    dx: 6,
-                  }}
+                  strokeWidth={1.25}
+                  label={labelProps(`CR @ ${callResistance}`, red)}
                 />
               )}
               {putSupport != null && (
                 <ReferenceLine
                   y={putSupport}
-                  stroke="#22c55e"
+                  stroke={green}
                   strokeDasharray="6 3"
-                  label={{
-                    value: `PS @ ${putSupport}`,
-                    position: "right",
-                    fill: fg,
-                    fontSize: 12,
-                    dx: 6,
-                  }}
+                  strokeWidth={1.25}
+                  label={labelProps(`PS @ ${putSupport}`, green)}
                 />
               )}
             </>

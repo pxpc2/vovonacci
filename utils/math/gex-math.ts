@@ -1,5 +1,3 @@
-// utils/math/gex-math.ts
-
 function nycTodayISO() {
   const now = new Date();
   const ny = new Date(
@@ -22,7 +20,6 @@ function argMax(map: Map<any, number>) {
   return bestK;
 }
 
-// binning helper with mode (default 'floor' to match SPX 25-pt walls)
 function binTo(
   x: number,
   step: number,

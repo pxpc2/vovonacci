@@ -32,6 +32,22 @@ export default function Page() {
     })();
   }, []);
 
+  useEffect(() => {
+    if (!data?.levels) return;
+    const { callResistance, putSupport, zeroDTE } = data.levels;
+    console.log("[NÍVEIS GAMMA - TODAS EXPIRAÇÕES]", {
+      CR: callResistance,
+      PS: putSupport,
+    });
+    if (zeroDTE) {
+      console.log("[NÍVEIS GAMMA - 0DTE]", {
+        data: zeroDTE.expiry,
+        CR0DTE: zeroDTE.callResistance,
+        PS0DTE: zeroDTE.putSupport,
+      });
+    }
+  }, [data?.levels]);
+
   const tables = useMemo(() => {
     if (!data) return null;
 
@@ -57,7 +73,7 @@ export default function Page() {
     const rankNet = (bars: typeof barsAll) =>
       [...bars]
         .map((d) => {
-          const net = d.call + d.put; // put is negative
+          const net = d.call + d.put;
           return { strike: d.strike, net, dom: net >= 0 ? "CALL" : "PUT" };
         })
         .sort((a, b) => Math.abs(b.net) - Math.abs(a.net))
@@ -67,7 +83,7 @@ export default function Page() {
       [...bars]
         .map((d) => {
           const putMag = Math.abs(d.put);
-          const total = d.call + putMag; // call + |put|
+          const total = d.call + putMag;
           const dom = d.call >= putMag ? "CALL" : "PUT";
           return { strike: d.strike, total, dom, call: d.call, putMag };
         })
@@ -107,16 +123,12 @@ export default function Page() {
   );
 
   const EPS = 0;
-
   function regime(net: number) {
     if (net > EPS) return "positiva";
     if (net < -EPS) return "negativa";
     return "neutra";
   }
-
   const regimeAll = regime(netAll);
-  //const regime0 = regime(net0); // É EXPOSICAO GAMMA 0DTE, NAO LEVO EM CONSIDERACAO
-
   const regimeClass = (r: string) =>
     r === "positiva"
       ? "text-emerald-400 border-emerald-800/60"
@@ -154,7 +166,6 @@ export default function Page() {
           </Link>
         </div>
 
-        {/* dataset meta (timestamp + 0DTE) */}
         <div className="px-10 flex items-center justify-between text-xs text-neutral-400">
           <div className="flex items-center gap-3">
             <span className="rounded-md border border-indigo-800/80 text-indigo-400 font-semibold px-2 py-0.5">
@@ -177,7 +188,6 @@ export default function Page() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 pt-2">
-          {/* CALL (all) */}
           <div className="rounded-xl border border-neutral-800/60 p-4">
             <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
               CALL GEX <span className="text-neutral-500">(todas)</span>
@@ -194,7 +204,6 @@ export default function Page() {
             </ul>
           </div>
 
-          {/* PUT (all) */}
           <div className="rounded-xl border border-neutral-800/60 p-4">
             <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
               PUT GEX <span className="text-neutral-500">(todas)</span>
@@ -211,7 +220,6 @@ export default function Page() {
             </ul>
           </div>
 
-          {/* CALL (0DTE) */}
           <div className="rounded-xl border border-neutral-800/60 p-4">
             <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
               CALL GEX <span className="text-neutral-500">(0DTE)</span>
@@ -235,7 +243,6 @@ export default function Page() {
             </ul>
           </div>
 
-          {/* PUT (0DTE) */}
           <div className="rounded-xl border border-neutral-800/60 p-4">
             <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
               PUT GEX <span className="text-neutral-500">(0DTE)</span>
@@ -259,7 +266,6 @@ export default function Page() {
             </ul>
           </div>
 
-          {/* NET (all) */}
           <div className="rounded-xl border border-neutral-800/60 p-4">
             <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
               NET GEX <span className="text-neutral-500">(todas)</span>
@@ -281,7 +287,6 @@ export default function Page() {
             </ul>
           </div>
 
-          {/* TOTAL (all) */}
           <div className="rounded-xl border border-neutral-800/60 p-4">
             <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
               TOTAL GEX <span className="text-neutral-500">(todas)</span>
@@ -308,7 +313,6 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Charts */}
         <div className=" w-full space-y-6 pb-10">
           <GexMassChart
             title="Call vs Put GEX — 0DTE"
