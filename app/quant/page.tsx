@@ -267,16 +267,16 @@ export default function Page() {
         </div>
 
         {/* Charts */}
-        <div className="px-10 w-full space-y-6 pb-10">
+        <div className=" w-full space-y-6 pb-10">
           <GexMassChart
-            title="Call vs Put Mass — 0DTE"
+            title="Call vs Put GEX — 0DTE"
             data={data.mass0Bars}
             spot={data.spot}
             callResistance={data.levels.zeroDTE?.callResistance ?? undefined}
             putSupport={data.levels.zeroDTE?.putSupport ?? undefined}
           />
           <GexMassChart
-            title="Call vs Put Mass — todas as expirações"
+            title="Call vs Put GEX — todas as expirações"
             data={data.massAllBars}
             spot={data.spot}
             callResistance={data.levels.callResistance}

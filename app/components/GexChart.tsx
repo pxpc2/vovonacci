@@ -29,7 +29,7 @@ export default function GexMassChart({
 }) {
   if (!data || data.length === 0) {
     return (
-      <div className="w-full h-[220px] rounded-2xl p-4 border border-neutral-800/60 flex items-center justify-center text-sm text-neutral-400">
+      <div className="w-full rounded-2xl p-4 border border-neutral-800/60 flex items-center justify-center text-sm text-neutral-400">
         {title}: sem dados
       </div>
     );
@@ -78,11 +78,9 @@ export default function GexMassChart({
       >
         <div style={{ fontWeight: 600, marginBottom: 6 }}>{d.strike}</div>
         <div style={{ color: "#22c55e" }}>
-          Call mass: {fmtBig(Math.abs(call))}
+          Call GEX: {fmtBig(Math.abs(call))}
         </div>
-        <div style={{ color: "#ef4444" }}>
-          Put mass: {fmtBig(Math.abs(put))}
-        </div>
+        <div style={{ color: "#ef4444" }}>Put GEX: {fmtBig(Math.abs(put))}</div>
         <div
           style={{ marginTop: 6, borderTop: "1px solid #333", paddingTop: 6 }}
         >
@@ -94,6 +92,10 @@ export default function GexMassChart({
       </div>
     );
   }
+  const equalLevel =
+    callResistance != null &&
+    putSupport != null &&
+    Number(callResistance) === Number(putSupport);
   return (
     <div className="w-full h-[520px] rounded-2xl p-4 py-6 shadow border border-neutral-800/60 bg-[var(--background)]">
       <div className="text-sm font-medium mb-2" style={{ color: fg }}>
@@ -133,14 +135,14 @@ export default function GexMassChart({
 
           <Bar dataKey="call" name="Call gamma" fill={green} barSize={10} />
           <Bar dataKey="put" name="Put gamma" fill={red} barSize={10} />
-
+          {/* SPOT */}
           {spot && (
             <ReferenceLine
               y={spot}
               stroke="#a3a3a3"
               strokeDasharray="4 4"
               label={{
-                value: `Spot ${spot}`,
+                value: `Spot @ ${spot}`,
                 position: "right",
                 fill: fg,
                 fontSize: 12,
@@ -148,33 +150,52 @@ export default function GexMassChart({
               }}
             />
           )}
-          {callResistance && (
+
+          {/* CR / PS merge if same strike */}
+          {equalLevel ? (
             <ReferenceLine
-              y={callResistance}
-              stroke="#ef4444"
+              y={callResistance as number}
+              stroke="#eab308" // amber to signal merged label; pick any neutral if you prefer
               strokeDasharray="6 3"
               label={{
-                value: `CR ${callResistance}`,
+                value: `PS / CR @ ${callResistance}`,
                 position: "right",
                 fill: fg,
                 fontSize: 12,
                 dx: 6,
               }}
             />
-          )}
-          {putSupport && (
-            <ReferenceLine
-              y={putSupport}
-              stroke="#22c55e"
-              strokeDasharray="6 3"
-              label={{
-                value: `PS ${putSupport}`,
-                position: "right",
-                fill: fg,
-                fontSize: 12,
-                dx: 6,
-              }}
-            />
+          ) : (
+            <>
+              {callResistance != null && (
+                <ReferenceLine
+                  y={callResistance}
+                  stroke="#ef4444"
+                  strokeDasharray="6 3"
+                  label={{
+                    value: `CR @ ${callResistance}`,
+                    position: "right",
+                    fill: fg,
+                    fontSize: 12,
+                    dx: 6,
+                  }}
+                />
+              )}
+              {putSupport != null && (
+                <ReferenceLine
+                  y={putSupport}
+                  stroke="#22c55e"
+                  strokeDasharray="6 3"
+                  label={{
+                    value: `PS @ ${putSupport}`,
+                    position: "right",
+                    fill: fg,
+                    fontSize: 12,
+                    dx: 6,
+                  }}
+                />
+              )}
+            </>
           )}
         </ComposedChart>
       </ResponsiveContainer>
