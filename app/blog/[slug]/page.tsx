@@ -36,12 +36,12 @@ export default async function BlogPost(props: {
           <div className="flex">
             <div className="flex flex-col py-10">
               <h1 className="text-2xl font-bold">{post.title}</h1>
-              <p className="text-xl text-gray-300">{post.date}</p>
+              <p className="text-md text-gray-300">Publicado em: {post.date}</p>
             </div>
           </div>
 
           <div
-            className="markdown-body"
+            className="markdown-body p-24 max-w-[1460px]"
             dangerouslySetInnerHTML={{ __html: html }}
           />
         </article>
