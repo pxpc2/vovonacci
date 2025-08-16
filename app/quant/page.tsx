@@ -213,7 +213,7 @@ export default function Page() {
                   regimeAll
                 )}`}
               >
-                Exposição γ: {regimeAll.toUpperCase()}
+                Perfil γ: {regimeAll.toUpperCase()}
               </span>
               <span className="rounded-md border border-neutral-800/60 px-2 py-0.5 whitespace-nowrap shrink-0">
                 timestamp (GMT-3): {asOfBR}
@@ -295,9 +295,9 @@ export default function Page() {
               <div className="text-sm font-semibold text-neutral-200 mb-3 text-center">
                 Variação 1D Max/Min (σ) —{" "}
                 {data.bands?.gammaPositive ? (
-                  <span className="text-emerald-500">exposição γ+</span>
+                  <span className="text-emerald-500">perfil γ+</span>
                 ) : (
-                  <span className="text-red-500">exposição γ−</span>
+                  <span className="text-red-500">perfil γ−</span>
                 )}
               </div>
 
