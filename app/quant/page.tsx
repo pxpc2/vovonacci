@@ -176,9 +176,9 @@ export default function Page() {
       <div className="relative min-h-screen">
         <div className="absolute inset-0 bg-[url('/wp.png')] bg-cover bg-center bg-no-repeat opacity-15 z-0"></div>
         <div className="relative z-10 font-sans flex flex-col gap-4 mx-12 sm:mx-32 h-full">
-          <div className="flex font-medium items-center justify-center pt-10 pb-8 border-b border-gray-400">
+          <div className="flex items-center justify-center pt-8 pb-6 border-b border-gray-400">
             <Link href="/" className="hover:underline">
-              <h1 className="text-2xl">Vovonacci@PJT</h1>
+              <h1 className="text-xl">vovonacci@PJT</h1>
             </Link>
           </div>
           <div className="flex flex-col items-center justify-center p-6 gap-3 text-neutral-300">
