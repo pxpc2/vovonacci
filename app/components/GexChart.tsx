@@ -43,11 +43,15 @@ export default function GexMassChart({
 }) {
   const fg = "var(--foreground)";
   const grid = "rgba(237,237,237,0.15)";
-  const green = "#22c55e"; // CALL
-  const red = "#ef4444"; // PUT
-  const amber = "#f59e0b"; // PS/CR
-  const purple = "#7c3aed"; // HVL e curva
-  const neutral = "#a3a3a3";
+
+  // Deep Sea (CALL) & Crimson (PUT)
+  const CALL_FILL = "#0EA5A3";
+  const CALL_STROKE = "#134E4A";
+  const PUT_FILL = "#E11D48";
+  const PUT_STROKE = "#7F1D1D";
+
+  const amber = "#f59e0b";
+  const purple = "#7c3aed";
 
   const merged =
     callResistance != null &&
@@ -60,7 +64,6 @@ export default function GexMassChart({
     return yDescending ? [...arr].sort((a, b) => b.strike - a.strike) : arr;
   }, [data, yDescending]);
 
-  // compressão SUAVE (log) para barras
   const dataWithBars = useMemo(() => {
     if (!normalizeBars || !sorted.length) return sorted;
 
@@ -90,15 +93,11 @@ export default function GexMassChart({
     }));
   }, [sorted, normalizeBars, normalizeQuantile]);
 
-  // curva compatível com as barras comprimidas
   const dataForChart = useMemo(() => {
     const arr = dataWithBars;
     if (!arr.length) return arr;
 
-    const hasServerCurve = arr.some(
-      (d: any) => typeof d.cumScaled === "number"
-    );
-    if (!normalizeBars) return arr; // usa curva vinda do servidor
+    if (!normalizeBars) return arr;
 
     const callKey = "callPlot" in arr[0] ? "callPlot" : "call";
     const putKey = "putPlot" in arr[0] ? "putPlot" : "put";
@@ -166,13 +165,17 @@ export default function GexMassChart({
         }}
       >
         <div style={{ fontWeight: 600, marginBottom: 6 }}>{d.strike}</div>
-        <div style={{ color: green }}>Call GEX: {fmtBig(Math.abs(call))}</div>
-        <div style={{ color: red }}>Put GEX: {fmtBig(Math.abs(put))}</div>
+        <div style={{ color: CALL_FILL }}>
+          Call GEX: {fmtBig(Math.abs(call))}
+        </div>
+        <div style={{ color: PUT_FILL }}>Put GEX: {fmtBig(Math.abs(put))}</div>
         <div
           style={{ marginTop: 6, borderTop: "1px solid #333", paddingTop: 6 }}
         >
           Net GEX:{" "}
-          <span style={{ color: net >= 0 ? green : red }}>{fmtBig(net)}</span>
+          <span style={{ color: net >= 0 ? CALL_FILL : PUT_FILL }}>
+            {fmtBig(net)}
+          </span>
         </div>
       </div>
     );
@@ -203,6 +206,17 @@ export default function GexMassChart({
           stackOffset="sign"
           margin={{ left: 80, right: 120, top: 8, bottom: 8 }}
         >
+          <defs>
+            <linearGradient id="callGrad" x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0%" stopColor={CALL_FILL} stopOpacity={0.95} />
+              <stop offset="100%" stopColor={CALL_FILL} stopOpacity={0.65} />
+            </linearGradient>
+            <linearGradient id="putGrad" x1="1" x2="0" y1="0" y2="0">
+              <stop offset="0%" stopColor={PUT_FILL} stopOpacity={0.95} />
+              <stop offset="100%" stopColor={PUT_FILL} stopOpacity={0.65} />
+            </linearGradient>
+          </defs>
+
           <CartesianGrid stroke={grid} />
           <XAxis
             type="number"
@@ -229,13 +243,17 @@ export default function GexMassChart({
           <Bar
             dataKey={normalizeBars ? "callPlot" : "call"}
             name="Call gamma"
-            fill={green}
+            fill="url(#callGrad)"
+            stroke={CALL_STROKE}
+            strokeWidth={0.6}
             barSize={10}
           />
           <Bar
             dataKey={normalizeBars ? "putPlot" : "put"}
             name="Put gamma"
-            fill={red}
+            fill="url(#putGrad)"
+            stroke={PUT_STROKE}
+            strokeWidth={0.6}
             barSize={10}
           />
 
@@ -245,7 +263,7 @@ export default function GexMassChart({
               dataKey={normalizeBars ? "cumPlotScaled" : "cumScaled"}
               stroke={purple}
               dot={false}
-              strokeWidth={1} // HVL/curva mais fina
+              strokeWidth={1}
               name="Curva GEX"
             />
           )}
@@ -266,19 +284,19 @@ export default function GexMassChart({
               {callResistance != null && (
                 <ReferenceLine
                   y={callResistance}
-                  stroke={red}
+                  stroke={PUT_FILL}
                   strokeDasharray="2 4"
                   strokeWidth={0.5}
-                  label={labelProps(`CR @ ${callResistance}`, red)}
+                  label={labelProps(`CR @ ${callResistance}`, PUT_FILL)}
                 />
               )}
               {putSupport != null && (
                 <ReferenceLine
                   y={putSupport}
-                  stroke={green}
+                  stroke={CALL_FILL}
                   strokeDasharray="2 4"
                   strokeWidth={0.5}
-                  label={labelProps(`PS @ ${putSupport}`, green)}
+                  label={labelProps(`PS @ ${putSupport}`, CALL_FILL)}
                 />
               )}
             </>

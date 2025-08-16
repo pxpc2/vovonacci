@@ -159,15 +159,15 @@ export default function Page() {
   );
   const EPS = 0;
   function regime(net: number) {
-    if (net > EPS) return "positiva";
-    if (net < -EPS) return "negativa";
-    return "neutra";
+    if (net > EPS) return "positivo";
+    if (net < -EPS) return "negativo";
+    return "neutro";
   }
   const regimeAll = regime(netAll);
   const regimeClass = (r: string) =>
-    r === "positiva"
+    r === "positivo"
       ? "text-emerald-400 border-emerald-800/60"
-      : r === "negativa"
+      : r === "negativo"
       ? "text-red-400 border-red-800/60"
       : "text-neutral-300 border-neutral-700/60";
 
@@ -205,8 +205,8 @@ export default function Page() {
           {/* Meta topo */}
           <div className="pt-4 pb-2 text-xs text-neutral-400">
             <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3">
-              <span className="rounded-md border border-orange-800/80 text-orange-400 px-2 py-0.5 whitespace-nowrap shrink-0">
-                {`$SPX - spot @ ${data.spot}`}
+              <span className="rounded-md border border-amber-700/80 text-amber-400 px-2 py-0.5 whitespace-nowrap shrink-0">
+                {`$SPX - SPOT: ${data.spot}`}
               </span>
               <span
                 className={`rounded-md border px-2 py-0.5 whitespace-nowrap shrink-0 ${regimeClass(
@@ -216,7 +216,7 @@ export default function Page() {
                 Perfil γ: {regimeAll.toUpperCase()}
               </span>
               <span className="rounded-md border border-neutral-800/60 px-2 py-0.5 whitespace-nowrap shrink-0">
-                timestamp (GMT-3): {asOfBR}
+                {asOfBR} (GMT-3)
               </span>
               <span className="rounded-md border border-neutral-800/60 px-2 py-0.5 whitespace-nowrap shrink-0">
                 0DTE: {data.zeroDteExpiry ?? "—"}
@@ -283,7 +283,7 @@ export default function Page() {
                     key={g.label}
                     className="flex items-center justify-between py-1.5"
                   >
-                    <span className="text-cyan-500/80">{g.label}</span>
+                    <span className="text-blue-900">{g.label}</span>
                     <span className="tabular-nums">{g.strike}</span>
                   </li>
                 ))}
@@ -335,10 +335,16 @@ export default function Page() {
                         2σ (região de retorno à média)
                       </div>
                       <div className="text-indigo-400 font-medium">
-                        Max: {fmtPx(data.bands.anchors.spot.levels["2σ"].max)}
+                        Max:{" "}
+                        <span className="text-neutral-50">
+                          {fmtPx(data.bands.anchors.spot.levels["2σ"].max)}
+                        </span>
                       </div>
                       <div className="text-indigo-400 font-medium">
-                        Min: {fmtPx(data.bands.anchors.spot.levels["2σ"].min)}
+                        Min:{" "}
+                        <span className="text-neutral-50">
+                          {fmtPx(data.bands.anchors.spot.levels["2σ"].min)}
+                        </span>
                       </div>
                     </div>
                     <div className="rounded border border-neutral-800/60 p-2">
