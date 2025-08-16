@@ -205,7 +205,7 @@ export default function Page() {
         {/* Meta topo */}
         <div className="px-10 flex items-center justify-between text-xs text-neutral-400">
           <div className="flex items-center gap-3">
-            <span className="rounded-md border border-indigo-orange/80 text-orange-400 font-semibold px-2 py-0.5">
+            <span className="rounded-md border border-orange-800/80 text-orange-400 font-semibold px-2 py-0.5">
               {`$SPX - spot @ ${data.spot}`}
             </span>
             <span
@@ -224,184 +224,138 @@ export default function Page() {
           </div>
         </div>
 
-        {/* NÍVEIS — 2 cartões: primários e secundários */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-          {/* NÍVEIS PRIMÁRIOS (CR/PS/HVL de todas e 0DTE) */}
-          <div className="rounded-xl border border-neutral-800/60 p-4 bg-black/20">
-            <div className="text-md font-semibold text-center mb-3 text-neutral-200"></div>
-            <ul className="text-sm space-y-2">
-              <li className="flex items-center justify-between">
-                <span className="text-indigo-500 font-medium">
-                  Call Resistance
-                </span>
+        {/* NÍVEIS + BANDAS — 3 cartões numa única fileira */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2 items-stretch">
+          {/* PRIMÁRIOS */}
+          <div className="rounded-xl border border-neutral-800/60 bg-black/20 p-4 h-full flex flex-col">
+            <div className="text-sm font-semibold text-center text-neutral-200 mb-3">
+              NÍVEIS PRIMÁRIOS
+            </div>
+            <ul className="text-sm divide-y divide-neutral-800/60">
+              <li className="flex items-center justify-between py-1.5">
+                <span className="text-indigo-400">Call Resistance</span>
                 <span className="tabular-nums">
                   {lv?.callResistance ?? "—"}
                 </span>
               </li>
-              <li className="flex items-center justify-between">
-                <span className="text-indigo-500  font-medium">
-                  Put Support
-                </span>
+              <li className="flex items-center justify-between py-1.5">
+                <span className="text-indigo-400">Put Support</span>
                 <span className="tabular-nums">{lv?.putSupport ?? "—"}</span>
               </li>
-              <li className="flex items-center justify-between">
-                <span className="text-indigo-500 font-medium">HVL</span>
+              <li className="flex items-center justify-between py-1.5">
+                <span className="text-indigo-400">HVL</span>
                 <span className="tabular-nums">{lv?.hvl ?? "—"}</span>
               </li>
-
-              <li className="h-px bg-neutral-800/60 my-2" />
-
-              <li className="flex items-center justify-between">
-                <span className="text-indigo-500  font-medium">
-                  Call Resistance 0DTE
-                </span>
+              <li className="flex items-center justify-between py-1.5">
+                <span className="text-indigo-400">Call Resistance 0DTE</span>
                 <span className="tabular-nums">
                   {lv?.zeroDTE?.callResistance ?? "—"}
                 </span>
               </li>
-              <li className="flex items-center justify-between">
-                <span className="text-indigo-500  font-medium">
-                  Put Support 0DTE
-                </span>
+              <li className="flex items-center justify-between py-1.5">
+                <span className="text-indigo-400">Put Support 0DTE</span>
                 <span className="tabular-nums">
                   {lv?.zeroDTE?.putSupport ?? "—"}
                 </span>
               </li>
-              <li className="flex items-center justify-between">
-                <span className="text-indigo-500 font-medium">HVL 0DTE</span>
+              <li className="flex items-center justify-between py-1.5">
+                <span className="text-indigo-400">HVL 0DTE</span>
                 <span className="tabular-nums">{lv?.zeroDTE?.hvl ?? "—"}</span>
               </li>
             </ul>
           </div>
 
-          {/* NÍVEIS SECUNDÁRIOS (GEX 1–6 0DTE) */}
-          <div className="rounded-xl border border-neutral-800/60 bg-black/20 p-4">
-            <div className="text-sm font-semibold text-center mb-3 text-neutral-200"></div>
-            <ul className="text-sm space-y-2">
+          {/* SECUNDÁRIOS */}
+          <div className="rounded-xl border border-neutral-800/60 bg-black/20 p-4 h-full flex flex-col">
+            <div className="text-sm font-semibold text-center text-neutral-200 mb-3">
+              NÍVEIS SECUNDÁRIOS (0DTE)
+            </div>
+            <ul className="text-sm divide-y divide-neutral-800/60">
               {gexMinor.length === 0 && (
-                <li className="text-neutral-500 text-center">sem dados</li>
+                <li className="text-neutral-500 text-center py-1.5">
+                  sem dados
+                </li>
               )}
               {gexMinor.map((g) => (
-                <li key={g.label} className="flex items-center justify-between">
-                  <span className="text-cyan-500/70 font-medium">
-                    {g.label}
-                  </span>
+                <li
+                  key={g.label}
+                  className="flex items-center justify-between py-1.5"
+                >
+                  <span className="text-cyan-500/80">{g.label}</span>
                   <span className="tabular-nums">{g.strike}</span>
                 </li>
               ))}
             </ul>
           </div>
-        </div>
 
-        {/* Bandas 1D (σ) */}
-        <div className="rounded-xl border border-neutral-800/60 bg-black/20 p-4 mb-10">
-          <div className="text-sm font-semibold mb-3 text-neutral-200">
-            Variação 1D Max/Min (desvio padrão σ) —{" "}
-            {data.bands?.gammaPositive ? (
-              <span className="text-emerald-500">exposição γ+</span>
-            ) : (
-              <span className="text-red-500">exposição γ−</span>
+          {/* BANDAS 1D */}
+          <div className="rounded-xl border border-neutral-800/60 bg-black/20 p-4 h-full flex flex-col">
+            <div className="text-sm font-semibold text-neutral-200 mb-3 text-center">
+              Variação 1D Max/Min (σ) —{" "}
+              {data.bands?.gammaPositive ? (
+                <span className="text-emerald-500">exposição γ+</span>
+              ) : (
+                <span className="text-red-500">exposição γ−</span>
+              )}
+            </div>
+
+            <div className="text-xs text-neutral-400 mb-3 flex flex-wrap gap-x-4 gap-y-1">
+              <span>σ_real: {pct(data.bands?.sigma?.realized)}</span>
+              <span>σ_impl(1d): {pct(data.bands?.sigma?.implied1d)}</span>
+              <span>σ_base: {pct(data.bands?.sigma?.base)}</span>
+              <span>
+                risk-reversal:{" "}
+                {data.bands?.sigma?.rr == null
+                  ? "—"
+                  : (100 * data.bands.sigma.rr).toFixed(2) + "%"}
+              </span>
+              <span>σ_up: {pct(data.bands?.sigma?.up)}</span>
+              <span>σ_dn: {pct(data.bands?.sigma?.dn)}</span>
+            </div>
+
+            {data.bands?.anchors?.spot && (
+              <div className="mt-auto">
+                <div className="text-xs text-neutral-400 mb-2">
+                  Âncora (spot): {fmtPx(data.bands.anchors.spot.anchor)}
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-sm">
+                  <div className="rounded border border-neutral-800/60 p-2">
+                    <div className="text-neutral-500 text-xs mb-1">1σ</div>
+                    <div className="text-neutral-500">
+                      Max: {fmtPx(data.bands.anchors.spot.levels["1σ"].max)}
+                    </div>
+                    <div className="text-neutral-500">
+                      Min: {fmtPx(data.bands.anchors.spot.levels["1σ"].min)}
+                    </div>
+                  </div>
+                  <div className="rounded border border-neutral-800/60 p-2">
+                    <div className="text-neutral-300 text-sm mb-1">
+                      2σ (região de retorno à média)
+                    </div>
+                    <div className="text-indigo-500 font-medium">
+                      Max: {fmtPx(data.bands.anchors.spot.levels["2σ"].max)}
+                    </div>
+                    <div className="text-indigo-500 font-medium">
+                      Min: {fmtPx(data.bands.anchors.spot.levels["2σ"].min)}
+                    </div>
+                  </div>
+                  <div className="rounded border border-neutral-800/60 p-2">
+                    <div className="text-neutral-500 text-xs mb-1">3σ</div>
+                    <div className="text-neutral-500">
+                      Max: {fmtPx(data.bands.anchors.spot.levels["3σ"].max)}
+                    </div>
+                    <div className="text-neutral-500">
+                      Min: {fmtPx(data.bands.anchors.spot.levels["3σ"].min)}
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
-
-          <div className="text-xs text-neutral-400 mb-3">
-            <span className="mr-3">
-              σ_real: {pct(data.bands?.sigma?.realized)}
-            </span>
-            <span className="mr-3">
-              σ_impl(1d): {pct(data.bands?.sigma?.implied1d)}
-            </span>
-            <span className="mr-3">σ_base: {pct(data.bands?.sigma?.base)}</span>
-            <span className="mr-3">
-              risk-reversal:{" "}
-              {data.bands?.sigma?.rr == null
-                ? "—"
-                : (100 * data.bands.sigma.rr).toFixed(2) + "%"}
-            </span>
-            <span className="mr-3">σ_up: {pct(data.bands?.sigma?.up)}</span>
-            <span className="mr-3">σ_dn: {pct(data.bands?.sigma?.dn)}</span>
-          </div>
-
-          {data.bands?.anchors?.spot && (
-            <div className="mb-2">
-              <div className="text-xs text-neutral-400 mb-1">
-                Âncora (spot): {fmtPx(data.bands.anchors.spot.anchor)}
-              </div>
-              <div className="grid grid-cols-3 gap-2 text-sm">
-                <div className="rounded border border-neutral-800/60 p-2">
-                  <div className="text-neutral-500 text-xs mb-1">1σ</div>
-                  <div>
-                    Max: {fmtPx(data.bands.anchors.spot.levels["1σ"].max)}
-                  </div>
-                  <div>
-                    Min: {fmtPx(data.bands.anchors.spot.levels["1σ"].min)}
-                  </div>
-                </div>
-
-                <div className="rounded border border-indigo-400 p-2">
-                  <div className="text-indigo-400 text-xs mb-1">
-                    2σ (região de retorno à média)
-                  </div>
-                  <div className="text-orange-400">
-                    Max: {fmtPx(data.bands.anchors.spot.levels["2σ"].max)}
-                  </div>
-                  <div className="text-orange-400">
-                    Min: {fmtPx(data.bands.anchors.spot.levels["2σ"].min)}
-                  </div>
-                </div>
-                <div className="rounded border border-neutral-800/60 p-2">
-                  <div className="text-neutral-500 text-xs mb-1">3σ</div>
-                  <div>
-                    Max: {fmtPx(data.bands.anchors.spot.levels["3σ"].max)}
-                  </div>
-                  <div>
-                    Min: {fmtPx(data.bands.anchors.spot.levels["3σ"].min)}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {data.bands?.anchors?.hvl && (
-            <div className="mt-4">
-              <div className="text-xs text-neutral-400 mb-1">
-                Âncora (HVL): {fmtPx(data.bands.anchors.hvl.anchor)}
-              </div>
-              <div className="grid grid-cols-3 gap-2 text-sm">
-                <div className="rounded border border-neutral-800/60 p-2">
-                  <div className="text-neutral-500 text-xs mb-1">1σ</div>
-                  <div>
-                    min: {fmtPx(data.bands.anchors.hvl.levels["1σ"].min)}
-                  </div>
-                  <div>
-                    max: {fmtPx(data.bands.anchors.hvl.levels["1σ"].max)}
-                  </div>
-                </div>
-                <div className="rounded border border-neutral-800/60 p-2">
-                  <div className="text-neutral-500 text-xs mb-1">2σ</div>
-                  <div>
-                    min: {fmtPx(data.bands.anchors.hvl.levels["2σ"].min)}
-                  </div>
-                  <div>
-                    max: {fmtPx(data.bands.anchors.hvl.levels["2σ"].max)}
-                  </div>
-                </div>
-                <div className="rounded border border-neutral-800/60 p-2">
-                  <div className="text-neutral-500 text-xs mb-1">3σ</div>
-                  <div>
-                    min: {fmtPx(data.bands.anchors.hvl.levels["3σ"].min)}
-                  </div>
-                  <div>
-                    max: {fmtPx(data.bands.anchors.hvl.levels["3σ"].max)}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Charts */}
-        <div className=" w-full space-y-6 pb-6">
+        <div className="w-full space-y-6 pb-6">
           <GexMassChart
             title="Call vs Put GEX — 0DTE"
             data={data.mass0Bars}
