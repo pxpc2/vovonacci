@@ -205,7 +205,7 @@ export default function Page() {
         {/* Meta topo */}
         <div className="px-10 flex items-center justify-between text-xs text-neutral-400">
           <div className="flex items-center gap-3">
-            <span className="rounded-md border border-indigo-800/80 text-indigo-400 font-semibold px-2 py-0.5">
+            <span className="rounded-md border border-indigo-orange/80 text-orange-400 font-semibold px-2 py-0.5">
               {`$SPX - spot @ ${data.spot}`}
             </span>
             <span
@@ -231,7 +231,7 @@ export default function Page() {
             <div className="text-md font-semibold text-center mb-3 text-neutral-200"></div>
             <ul className="text-sm space-y-2">
               <li className="flex items-center justify-between">
-                <span className="text-red-400 font-medium">
+                <span className="text-indigo-500 font-medium">
                   Call Resistance
                 </span>
                 <span className="tabular-nums">
@@ -239,20 +239,20 @@ export default function Page() {
                 </span>
               </li>
               <li className="flex items-center justify-between">
-                <span className="text-emerald-400 font-medium">
+                <span className="text-indigo-500  font-medium">
                   Put Support
                 </span>
                 <span className="tabular-nums">{lv?.putSupport ?? "—"}</span>
               </li>
               <li className="flex items-center justify-between">
-                <span className="text-violet-400 font-medium">HVL</span>
+                <span className="text-indigo-500 font-medium">HVL</span>
                 <span className="tabular-nums">{lv?.hvl ?? "—"}</span>
               </li>
 
               <li className="h-px bg-neutral-800/60 my-2" />
 
               <li className="flex items-center justify-between">
-                <span className="text-red-400 font-medium">
+                <span className="text-indigo-500  font-medium">
                   Call Resistance 0DTE
                 </span>
                 <span className="tabular-nums">
@@ -260,7 +260,7 @@ export default function Page() {
                 </span>
               </li>
               <li className="flex items-center justify-between">
-                <span className="text-emerald-400 font-medium">
+                <span className="text-indigo-500  font-medium">
                   Put Support 0DTE
                 </span>
                 <span className="tabular-nums">
@@ -268,7 +268,7 @@ export default function Page() {
                 </span>
               </li>
               <li className="flex items-center justify-between">
-                <span className="text-violet-400 font-medium">HVL 0DTE</span>
+                <span className="text-indigo-500 font-medium">HVL 0DTE</span>
                 <span className="tabular-nums">{lv?.zeroDTE?.hvl ?? "—"}</span>
               </li>
             </ul>
@@ -296,7 +296,12 @@ export default function Page() {
         {/* Bandas 1D (σ) */}
         <div className="rounded-xl border border-neutral-800/60 bg-black/20 p-4 mb-10">
           <div className="text-sm font-semibold mb-3 text-neutral-200">
-            variação 1D max/min (σ) — {data.bands?.gammaPositive ? "γ+" : "γ−"}
+            Variação 1D Max/Min (desvio padrão σ) —{" "}
+            {data.bands?.gammaPositive ? (
+              <span className="text-emerald-500">exposição γ+</span>
+            ) : (
+              <span className="text-red-500">exposição γ−</span>
+            )}
           </div>
 
           <div className="text-xs text-neutral-400 mb-3">
@@ -326,29 +331,31 @@ export default function Page() {
                 <div className="rounded border border-neutral-800/60 p-2">
                   <div className="text-neutral-500 text-xs mb-1">1σ</div>
                   <div>
-                    min: {fmtPx(data.bands.anchors.spot.levels["1σ"].min)}
+                    Max: {fmtPx(data.bands.anchors.spot.levels["1σ"].max)}
                   </div>
                   <div>
-                    max: {fmtPx(data.bands.anchors.spot.levels["1σ"].max)}
+                    Min: {fmtPx(data.bands.anchors.spot.levels["1σ"].min)}
                   </div>
                 </div>
 
                 <div className="rounded border border-indigo-400 p-2">
-                  <div className="text-neutral-500 text-xs mb-1">2σ</div>
-                  <div>
-                    min: {fmtPx(data.bands.anchors.spot.levels["2σ"].min)}
+                  <div className="text-indigo-400 font-semibold text-xs mb-1">
+                    2σ (região de retorno à média)
                   </div>
-                  <div>
-                    max: {fmtPx(data.bands.anchors.spot.levels["2σ"].max)}
+                  <div className="text-orange-400">
+                    Max: {fmtPx(data.bands.anchors.spot.levels["2σ"].max)}
+                  </div>
+                  <div className="text-orange-400">
+                    Min: {fmtPx(data.bands.anchors.spot.levels["2σ"].min)}
                   </div>
                 </div>
                 <div className="rounded border border-neutral-800/60 p-2">
                   <div className="text-neutral-500 text-xs mb-1">3σ</div>
                   <div>
-                    min: {fmtPx(data.bands.anchors.spot.levels["3σ"].min)}
+                    Max: {fmtPx(data.bands.anchors.spot.levels["3σ"].max)}
                   </div>
                   <div>
-                    max: {fmtPx(data.bands.anchors.spot.levels["3σ"].max)}
+                    Min: {fmtPx(data.bands.anchors.spot.levels["3σ"].min)}
                   </div>
                 </div>
               </div>
