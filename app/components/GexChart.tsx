@@ -290,7 +290,7 @@ export default function GexMassChart({
               <ReferenceLine
                 y={hvl}
                 stroke={purple}
-                strokeDasharray="6 3"
+                strokeDasharray="2 4"
                 strokeWidth={1}
                 label={labelProps(`HVL @ ${hvl}`, purple)}
               />

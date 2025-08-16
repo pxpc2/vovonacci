@@ -1,4 +1,4 @@
-export const SPOT_DEFAULT = 6465;
+export const SPOT_DEFAULT = 6468;
 
 function envSpot(): number | undefined {
   const raw = process.env.NEXT_PUBLIC_SPOT_OVERRIDE;
