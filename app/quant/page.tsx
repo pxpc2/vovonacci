@@ -227,7 +227,7 @@ export default function Page() {
         {/* NÍVEIS — 2 cartões: primários e secundários */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
           {/* NÍVEIS PRIMÁRIOS (CR/PS/HVL de todas e 0DTE) */}
-          <div className="rounded-xl border border-neutral-800/60 p-4">
+          <div className="rounded-xl border border-neutral-800/60 p-4 bg-black/20">
             <div className="text-md font-semibold text-center mb-3 text-neutral-200"></div>
             <ul className="text-sm space-y-2">
               <li className="flex items-center justify-between">
@@ -275,7 +275,7 @@ export default function Page() {
           </div>
 
           {/* NÍVEIS SECUNDÁRIOS (GEX 1–6 0DTE) */}
-          <div className="rounded-xl border border-neutral-800/60 p-4">
+          <div className="rounded-xl border border-neutral-800/60 bg-black/20 p-4">
             <div className="text-sm font-semibold text-center mb-3 text-neutral-200"></div>
             <ul className="text-sm space-y-2">
               {gexMinor.length === 0 && (
@@ -339,7 +339,7 @@ export default function Page() {
                 </div>
 
                 <div className="rounded border border-indigo-400 p-2">
-                  <div className="text-indigo-400 font-semibold text-xs mb-1">
+                  <div className="text-indigo-400 text-xs mb-1">
                     2σ (região de retorno à média)
                   </div>
                   <div className="text-orange-400">
