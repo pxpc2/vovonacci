@@ -203,22 +203,22 @@ export default function Page() {
         </div>
 
         {/* Meta topo */}
-        <div className="px-10 flex items-center justify-between text-xs text-neutral-400">
-          <div className="flex items-center gap-3">
-            <span className="rounded-md border border-orange-800/80 text-orange-400 font-semibold px-2 py-0.5">
+        <div className="px-4 sm:px-10 text-xs text-neutral-400">
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3">
+            <span className="rounded-md border border-orange-800/80 text-orange-400 px-2 py-0.5 whitespace-nowrap shrink-0">
               {`$SPX - spot @ ${data.spot}`}
             </span>
             <span
-              className={`rounded-md border px-2 py-0.5 ${regimeClass(
+              className={`rounded-md border px-2 py-0.5 whitespace-nowrap shrink-0 ${regimeClass(
                 regimeAll
               )}`}
             >
-              exposição γ: {regimeAll}
+              Exposição γ: {regimeAll.toUpperCase()}
             </span>
-            <span className="rounded-md border border-neutral-800/60 px-2 py-0.5">
-              timestamp de coleta de dados (GMT-3): {asOfBR}
+            <span className="rounded-md border border-neutral-800/60 px-2 py-0.5 whitespace-nowrap shrink-0">
+              timestamp (GMT-3): {asOfBR}
             </span>
-            <span className="rounded-md border border-neutral-800/60 px-2 py-0.5">
+            <span className="rounded-md border border-neutral-800/60 px-2 py-0.5 whitespace-nowrap shrink-0">
               0DTE: {data.zeroDteExpiry ?? "—"}
             </span>
           </div>
@@ -229,7 +229,7 @@ export default function Page() {
           {/* PRIMÁRIOS */}
           <div className="rounded-xl border border-neutral-800/60 bg-black/20 p-4 h-full flex flex-col">
             <div className="text-sm font-semibold text-center text-neutral-200 mb-3">
-              NÍVEIS PRIMÁRIOS
+              Níveis γ
             </div>
             <ul className="text-sm divide-y divide-neutral-800/60">
               <li className="flex items-center justify-between py-1.5">
@@ -268,7 +268,7 @@ export default function Page() {
           {/* SECUNDÁRIOS */}
           <div className="rounded-xl border border-neutral-800/60 bg-black/20 p-4 h-full flex flex-col">
             <div className="text-sm font-semibold text-center text-neutral-200 mb-3">
-              NÍVEIS SECUNDÁRIOS (0DTE)
+              Subníveis γ
             </div>
             <ul className="text-sm divide-y divide-neutral-800/60">
               {gexMinor.length === 0 && (
@@ -332,10 +332,10 @@ export default function Page() {
                     <div className="text-neutral-300 text-sm mb-1">
                       2σ (região de retorno à média)
                     </div>
-                    <div className="text-indigo-500 font-medium">
+                    <div className="text-indigo-400 font-medium">
                       Max: {fmtPx(data.bands.anchors.spot.levels["2σ"].max)}
                     </div>
-                    <div className="text-indigo-500 font-medium">
+                    <div className="text-indigo-400 font-medium">
                       Min: {fmtPx(data.bands.anchors.spot.levels["2σ"].min)}
                     </div>
                   </div>
