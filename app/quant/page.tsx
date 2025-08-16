@@ -171,6 +171,45 @@ export default function Page() {
       ? "text-red-400 border-red-800/60"
       : "text-neutral-300 border-neutral-700/60";
 
+  // (formato p/ TradingView)
+  const tvLevelsString = useMemo(() => {
+    if (!data) return "";
+
+    const lv = data.levels;
+    const parts: string[] = ["$SPX:"];
+
+    const add = (label: string, val: unknown) => {
+      if (typeof val === "number" && Number.isFinite(val)) {
+        parts.push(`${label}: ${Math.round(val)}`);
+      }
+    };
+
+    // principais
+    add("Call Resistance", lv?.callResistance);
+    add("Put Support", lv?.putSupport);
+    add("HVL", lv?.hvl);
+    add("Call Resistance 0DTE", lv?.zeroDTE?.callResistance);
+    add("Put Support 0DTE", lv?.zeroDTE?.putSupport);
+    add("HVL 0DTE", lv?.zeroDTE?.hvl);
+
+    // banda 2σ
+    const b2 = data.bands?.anchors?.spot?.levels?.["2σ"];
+    if (b2 && typeof b2.min === "number" && typeof b2.max === "number") {
+      add("1D Min", b2.min);
+      add("1D Max", b2.max);
+    }
+
+    // GEX 1–6 (secundários 0DTE)
+    gexMinor.forEach((g, i) => add(`GEX ${i + 1}`, g.strike));
+
+    return parts.join(", ");
+  }, [data, gexMinor]);
+  useEffect(() => {
+    if (tvLevelsString) {
+      console.log(tvLevelsString);
+    }
+  }, [tvLevelsString]);
+
   if (!data) {
     return (
       <div className="relative min-h-screen">
