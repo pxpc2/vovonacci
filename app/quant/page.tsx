@@ -1,3 +1,4 @@
+// app/quant/page.tsx
 "use client";
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
@@ -86,7 +87,7 @@ export default function Page() {
       [...bars]
         .map((d) => {
           const putMag = Math.abs(d.put);
-          const total = d.call + putMag;
+          const total = d.call + putMag; // call + |put|
           const dom = d.call >= putMag ? "CALL" : "PUT";
           return { strike: d.strike, total, dom, call: d.call, putMag };
         })
@@ -100,8 +101,46 @@ export default function Page() {
       topGrossAll: rankGross(barsAll),
       topPuts0: rankPuts(bars0),
       topCalls0: rankCalls(bars0),
+      // novo: TOTAL GEX só do 0DTE
+      topGross0: rankGross(bars0),
     };
   }, [data]);
+
+  // GEX levels 0DTE (TOTAL GEX), excluindo níveis “maiores”
+  useEffect(() => {
+    if (!tables?.topGross0?.length || !data?.levels) return;
+
+    const L = data.levels;
+    const z = L.zeroDTE ?? {};
+    const snap5 = (x: number | null | undefined) =>
+      x == null ? null : Math.round(Number(x) / 5) * 5;
+
+    // strikes a excluir (CR/PS de todas + CR/PS 0DTE + HVL/HVL0DTE arredondados p/ grade de 5)
+    const exclude = new Set(
+      [
+        L.callResistance,
+        L.putSupport,
+        z.callResistance,
+        z.putSupport,
+        snap5(L.hvl),
+        snap5(z.hvl),
+      ]
+        .filter((v) => Number.isFinite(v))
+        .map((v) => Number(v))
+    );
+
+    const candidates = tables.topGross0.filter(
+      (r: any) => !exclude.has(r.strike)
+    );
+    const top5 = candidates.slice(0, 5);
+
+    const out: Record<string, number> = {};
+    top5.forEach((r: any, i: number) => {
+      out[`gex ${i + 1}`] = r.strike;
+    });
+
+    console.log("[GEX levels 0DTE - TOTAL (excl. majors)]", out, top5);
+  }, [tables?.topGross0, data?.levels]);
 
   const asOfBR = useMemo(
     () => fmtTZ(data?.asOfMs, "pt-BR", "America/Sao_Paulo"),
@@ -171,7 +210,7 @@ export default function Page() {
         <div className="px-10 flex items-center justify-between text-xs text-neutral-400">
           <div className="flex items-center gap-3">
             <span className="rounded-md border border-indigo-800/80 text-indigo-400 font-semibold px-2 py-0.5">
-              {`$SPX - SPOT PRICE @ ${data.spot}`}
+              {`$SPX - spot @ ${data.spot}`}
             </span>
             <span
               className={`rounded-md border px-2 py-0.5 ${regimeClass(
@@ -190,6 +229,7 @@ export default function Page() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 pt-2">
+          {/* CALL (todas) */}
           <div className="rounded-xl border border-neutral-800/60 p-4">
             <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
               CALL GEX <span className="text-neutral-500">(todas)</span>
@@ -206,6 +246,7 @@ export default function Page() {
             </ul>
           </div>
 
+          {/* PUT (todas) */}
           <div className="rounded-xl border border-neutral-800/60 p-4">
             <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
               PUT GEX <span className="text-neutral-500">(todas)</span>
@@ -222,6 +263,7 @@ export default function Page() {
             </ul>
           </div>
 
+          {/* CALL (0DTE) */}
           <div className="rounded-xl border border-neutral-800/60 p-4">
             <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
               CALL GEX <span className="text-neutral-500">(0DTE)</span>
@@ -245,6 +287,7 @@ export default function Page() {
             </ul>
           </div>
 
+          {/* PUT (0DTE) */}
           <div className="rounded-xl border border-neutral-800/60 p-4">
             <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
               PUT GEX <span className="text-neutral-500">(0DTE)</span>
@@ -268,6 +311,7 @@ export default function Page() {
             </ul>
           </div>
 
+          {/* NET (todas) */}
           <div className="rounded-xl border border-neutral-800/60 p-4">
             <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
               NET GEX <span className="text-neutral-500">(todas)</span>
@@ -289,28 +333,36 @@ export default function Page() {
             </ul>
           </div>
 
+          {/* TOTAL GEX (0DTE) — substitui a tabela antiga de “todas” */}
           <div className="rounded-xl border border-neutral-800/60 p-4">
             <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
-              TOTAL GEX <span className="text-neutral-500">(todas)</span>
+              TOTAL GEX <span className="text-neutral-500">(0DTE)</span>
             </div>
             <ul className="text-sm space-y-2">
-              {tables!.topGrossAll.map((r, i) => (
-                <li key={i} className="flex items-center justify-between">
-                  <span className="text-indigo-400">{r.strike}</span>
-                  <span className="tabular-nums">
-                    <span className="text-neutral-300 mr-2">
-                      {fmtBig(r.total)}
+              {(tables!.topGross0?.length ? tables!.topGross0 : []).map(
+                (r: any, i: number) => (
+                  <li key={i} className="flex items-center justify-between">
+                    <span className="text-indigo-400">{r.strike}</span>
+                    <span className="tabular-nums">
+                      <span className="text-neutral-300 mr-2">
+                        {fmtBig(r.total)}
+                      </span>
+                      <span
+                        className={`text-xs ${
+                          r.dom === "CALL" ? "text-emerald-400" : "text-red-400"
+                        }`}
+                      >
+                        ({r.dom} dom)
+                      </span>
                     </span>
-                    <span
-                      className={`text-xs ${
-                        r.dom === "CALL" ? "text-emerald-400" : "text-red-400"
-                      }`}
-                    >
-                      ({r.dom})
-                    </span>
-                  </span>
+                  </li>
+                )
+              )}
+              {!tables!.topGross0?.length && (
+                <li className="text-neutral-500 text-sm text-center">
+                  sem dados 0DTE
                 </li>
-              ))}
+              )}
             </ul>
           </div>
         </div>
@@ -324,8 +376,8 @@ export default function Page() {
             callResistance={data.levels.zeroDTE?.callResistance ?? undefined}
             putSupport={data.levels.zeroDTE?.putSupport ?? undefined}
             hvl={data.levels.zeroDTE?.hvl ?? undefined}
-            normalizeBars={true} // << suaviza outliers no 0DTE
-            normalizeQuantile={0.9} // pode ajustar 0.85–0.95 conforme gosto
+            normalizeBars={true}
+            normalizeQuantile={0.9}
           />
           <GexMassChart
             title="Call vs Put GEX — todas as expirações"
@@ -334,7 +386,7 @@ export default function Page() {
             callResistance={data.levels.callResistance}
             putSupport={data.levels.putSupport}
             hvl={data.levels.hvl}
-            normalizeBars={false} // mantém escala “real” nas todas
+            normalizeBars={false}
           />
         </div>
       </div>

@@ -292,7 +292,7 @@ export default function GexMassChart({
                 stroke={purple}
                 strokeDasharray="2 4"
                 strokeWidth={1}
-                label={labelProps(`HVL @ ${hvl}`, purple)}
+                label={labelProps(`HVL @ ${hvl}`, "#7e5ac4")}
               />
             )}
         </ComposedChart>
