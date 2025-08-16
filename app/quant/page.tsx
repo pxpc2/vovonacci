@@ -195,325 +195,332 @@ export default function Page() {
     <div className="relative min-h-screen">
       <div className="absolute inset-0 bg-[url('/wp.png')] bg-cover bg-center bg-no-repeat opacity-15 z-0"></div>
 
-      <div className="relative z-10 font-sans flex flex-col gap-4 mx-12 sm:mx-32 h-full">
-        <div className="flex font-medium items-center justify-center pt-10 pb-8 border-b border-gray-400">
-          <Link href="/" className="hover:underline">
-            <h1 className="text-2xl">Vovonacci@PJT</h1>
-          </Link>
-        </div>
-
-        {/* Meta topo */}
-        <div className="px-4 sm:px-10 text-xs text-neutral-400">
-          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3">
-            <span className="rounded-md border border-orange-800/80 text-orange-400 px-2 py-0.5 whitespace-nowrap shrink-0">
-              {`$SPX - spot @ ${data.spot}`}
-            </span>
-            <span
-              className={`rounded-md border px-2 py-0.5 whitespace-nowrap shrink-0 ${regimeClass(
-                regimeAll
-              )}`}
-            >
-              Exposição γ: {regimeAll.toUpperCase()}
-            </span>
-            <span className="rounded-md border border-neutral-800/60 px-2 py-0.5 whitespace-nowrap shrink-0">
-              timestamp (GMT-3): {asOfBR}
-            </span>
-            <span className="rounded-md border border-neutral-800/60 px-2 py-0.5 whitespace-nowrap shrink-0">
-              0DTE: {data.zeroDteExpiry ?? "—"}
-            </span>
+      <div className="relative z-10 font-sans flex flex-col gap-4 mx-12 sm:mx-32 h-full items-center">
+        <div className="sm:max-w-[1920px]">
+          <div className="flex items-center justify-center pt-8 pb-6 border-b border-gray-400">
+            <Link href="/" className="hover:underline">
+              <h1 className="text-xl">vovonacci@PJT</h1>
+            </Link>
           </div>
-        </div>
-
-        {/* NÍVEIS + BANDAS — 3 cartões numa única fileira */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2 items-stretch">
-          {/* PRIMÁRIOS */}
-          <div className="rounded-xl border border-neutral-800/60 bg-black/20 p-4 h-full flex flex-col">
-            <div className="text-sm font-semibold text-center text-neutral-200 mb-3">
-              Níveis γ
-            </div>
-            <ul className="text-sm divide-y divide-neutral-800/60">
-              <li className="flex items-center justify-between py-1.5">
-                <span className="text-indigo-400">Call Resistance</span>
-                <span className="tabular-nums">
-                  {lv?.callResistance ?? "—"}
-                </span>
-              </li>
-              <li className="flex items-center justify-between py-1.5">
-                <span className="text-indigo-400">Put Support</span>
-                <span className="tabular-nums">{lv?.putSupport ?? "—"}</span>
-              </li>
-              <li className="flex items-center justify-between py-1.5">
-                <span className="text-indigo-400">HVL</span>
-                <span className="tabular-nums">{lv?.hvl ?? "—"}</span>
-              </li>
-              <li className="flex items-center justify-between py-1.5">
-                <span className="text-indigo-400">Call Resistance 0DTE</span>
-                <span className="tabular-nums">
-                  {lv?.zeroDTE?.callResistance ?? "—"}
-                </span>
-              </li>
-              <li className="flex items-center justify-between py-1.5">
-                <span className="text-indigo-400">Put Support 0DTE</span>
-                <span className="tabular-nums">
-                  {lv?.zeroDTE?.putSupport ?? "—"}
-                </span>
-              </li>
-              <li className="flex items-center justify-between py-1.5">
-                <span className="text-indigo-400">HVL 0DTE</span>
-                <span className="tabular-nums">{lv?.zeroDTE?.hvl ?? "—"}</span>
-              </li>
-            </ul>
-          </div>
-
-          {/* SECUNDÁRIOS */}
-          <div className="rounded-xl border border-neutral-800/60 bg-black/20 p-4 h-full flex flex-col">
-            <div className="text-sm font-semibold text-center text-neutral-200 mb-3">
-              Subníveis γ
-            </div>
-            <ul className="text-sm divide-y divide-neutral-800/60">
-              {gexMinor.length === 0 && (
-                <li className="text-neutral-500 text-center py-1.5">
-                  sem dados
-                </li>
-              )}
-              {gexMinor.map((g) => (
-                <li
-                  key={g.label}
-                  className="flex items-center justify-between py-1.5"
-                >
-                  <span className="text-cyan-500/80">{g.label}</span>
-                  <span className="tabular-nums">{g.strike}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* BANDAS 1D */}
-          <div className="rounded-xl border border-neutral-800/60 bg-black/20 p-4 h-full flex flex-col">
-            <div className="text-sm font-semibold text-neutral-200 mb-3 text-center">
-              Variação 1D Max/Min (σ) —{" "}
-              {data.bands?.gammaPositive ? (
-                <span className="text-emerald-500">exposição γ+</span>
-              ) : (
-                <span className="text-red-500">exposição γ−</span>
-              )}
-            </div>
-
-            <div className="text-xs text-neutral-400 mb-3 flex flex-wrap gap-x-4 gap-y-1">
-              <span>σ_real: {pct(data.bands?.sigma?.realized)}</span>
-              <span>σ_impl(1d): {pct(data.bands?.sigma?.implied1d)}</span>
-              <span>σ_base: {pct(data.bands?.sigma?.base)}</span>
-              <span>
-                risk-reversal:{" "}
-                {data.bands?.sigma?.rr == null
-                  ? "—"
-                  : (100 * data.bands.sigma.rr).toFixed(2) + "%"}
+          {/* Meta topo */}
+          <div className="pt-4 pb-2 text-xs text-neutral-400">
+            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3">
+              <span className="rounded-md border border-orange-800/80 text-orange-400 px-2 py-0.5 whitespace-nowrap shrink-0">
+                {`$SPX - spot @ ${data.spot}`}
               </span>
-              <span>σ_up: {pct(data.bands?.sigma?.up)}</span>
-              <span>σ_dn: {pct(data.bands?.sigma?.dn)}</span>
+              <span
+                className={`rounded-md border px-2 py-0.5 whitespace-nowrap shrink-0 ${regimeClass(
+                  regimeAll
+                )}`}
+              >
+                Exposição γ: {regimeAll.toUpperCase()}
+              </span>
+              <span className="rounded-md border border-neutral-800/60 px-2 py-0.5 whitespace-nowrap shrink-0">
+                timestamp (GMT-3): {asOfBR}
+              </span>
+              <span className="rounded-md border border-neutral-800/60 px-2 py-0.5 whitespace-nowrap shrink-0">
+                0DTE: {data.zeroDteExpiry ?? "—"}
+              </span>
             </div>
+          </div>
 
-            {data.bands?.anchors?.spot && (
-              <div className="mt-auto">
-                <div className="text-xs text-neutral-400 mb-2">
-                  Âncora (spot): {fmtPx(data.bands.anchors.spot.anchor)}
-                </div>
-                <div className="grid grid-cols-3 gap-2 text-sm">
-                  <div className="rounded border border-neutral-800/60 p-2">
-                    <div className="text-neutral-500 text-xs mb-1">1σ</div>
-                    <div className="text-neutral-500">
-                      Max: {fmtPx(data.bands.anchors.spot.levels["1σ"].max)}
-                    </div>
-                    <div className="text-neutral-500">
-                      Min: {fmtPx(data.bands.anchors.spot.levels["1σ"].min)}
-                    </div>
-                  </div>
-                  <div className="rounded border border-neutral-800/60 p-2">
-                    <div className="text-neutral-300 text-sm mb-1">
-                      2σ (região de retorno à média)
-                    </div>
-                    <div className="text-indigo-400 font-medium">
-                      Max: {fmtPx(data.bands.anchors.spot.levels["2σ"].max)}
-                    </div>
-                    <div className="text-indigo-400 font-medium">
-                      Min: {fmtPx(data.bands.anchors.spot.levels["2σ"].min)}
-                    </div>
-                  </div>
-                  <div className="rounded border border-neutral-800/60 p-2">
-                    <div className="text-neutral-500 text-xs mb-1">3σ</div>
-                    <div className="text-neutral-500">
-                      Max: {fmtPx(data.bands.anchors.spot.levels["3σ"].max)}
-                    </div>
-                    <div className="text-neutral-500">
-                      Min: {fmtPx(data.bands.anchors.spot.levels["3σ"].min)}
-                    </div>
-                  </div>
-                </div>
+          {/* NÍVEIS + BANDAS — 3 cartões numa única fileira */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2 items-stretch">
+            {/* PRIMÁRIOS */}
+            <div className="rounded-xl border border-neutral-800/60 bg-black/20 p-4 h-full flex flex-col">
+              <div className="text-sm font-semibold text-center text-neutral-200 mb-3">
+                Níveis γ
               </div>
-            )}
-          </div>
-        </div>
-
-        {/* Charts */}
-        <div className="w-full space-y-6 pb-6">
-          <GexMassChart
-            title="Call vs Put GEX — 0DTE"
-            data={data.mass0Bars}
-            spot={data.spot}
-            callResistance={lv.zeroDTE?.callResistance ?? undefined}
-            putSupport={lv.zeroDTE?.putSupport ?? undefined}
-            hvl={lv.zeroDTE?.hvl ?? undefined}
-            normalizeBars={true}
-            normalizeQuantile={0.9}
-          />
-          <GexMassChart
-            title="Call vs Put GEX — todas as expirações"
-            data={data.massAllBars}
-            spot={data.spot}
-            callResistance={lv.callResistance}
-            putSupport={lv.putSupport}
-            hvl={lv.hvl}
-            normalizeBars={false}
-          />
-        </div>
-
-        {/* Tabelas topo */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 pt-2 mb-24">
-          {/* CALL (todas) */}
-          <div className="rounded-xl border border-neutral-800/60 p-4">
-            <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
-              CALL GEX <span className="text-neutral-500">(todas)</span>
-            </div>
-            <ul className="text-sm space-y-2">
-              {tables!.topCallsAll.map((r, i) => (
-                <li key={i} className="flex items-center justify-between">
-                  <span className="text-indigo-400">{r.strike}</span>
-                  <span className="text-emerald-400 tabular-nums">
-                    {fmtBig(r.value)}
+              <ul className="text-sm divide-y divide-neutral-800/60">
+                <li className="flex items-center justify-between py-1.5">
+                  <span className="text-indigo-400">Call Resistance</span>
+                  <span className="tabular-nums">
+                    {lv?.callResistance ?? "—"}
                   </span>
                 </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* PUT (todas) */}
-          <div className="rounded-xl border border-neutral-800/60 p-4">
-            <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
-              PUT GEX <span className="text-neutral-500">(todas)</span>
-            </div>
-            <ul className="text-sm space-y-2">
-              {tables!.topPutsAll.map((r, i) => (
-                <li key={i} className="flex items-center justify-between">
-                  <span className="text-indigo-400">{r.strike}</span>
-                  <span className="text-red-400 tabular-nums">
-                    {fmtBig(r.value)}
+                <li className="flex items-center justify-between py-1.5">
+                  <span className="text-indigo-400">Put Support</span>
+                  <span className="tabular-nums">{lv?.putSupport ?? "—"}</span>
+                </li>
+                <li className="flex items-center justify-between py-1.5">
+                  <span className="text-indigo-400">HVL</span>
+                  <span className="tabular-nums">{lv?.hvl ?? "—"}</span>
+                </li>
+                <li className="flex items-center justify-between py-1.5">
+                  <span className="text-indigo-400">Call Resistance 0DTE</span>
+                  <span className="tabular-nums">
+                    {lv?.zeroDTE?.callResistance ?? "—"}
                   </span>
                 </li>
-              ))}
-            </ul>
+                <li className="flex items-center justify-between py-1.5">
+                  <span className="text-indigo-400">Put Support 0DTE</span>
+                  <span className="tabular-nums">
+                    {lv?.zeroDTE?.putSupport ?? "—"}
+                  </span>
+                </li>
+                <li className="flex items-center justify-between py-1.5">
+                  <span className="text-indigo-400">HVL 0DTE</span>
+                  <span className="tabular-nums">
+                    {lv?.zeroDTE?.hvl ?? "—"}
+                  </span>
+                </li>
+              </ul>
+            </div>
+
+            {/* SECUNDÁRIOS */}
+            <div className="rounded-xl border border-neutral-800/60 bg-black/20 p-4 h-full flex flex-col">
+              <div className="text-sm font-semibold text-center text-neutral-200 mb-3">
+                Subníveis γ
+              </div>
+              <ul className="text-sm divide-y divide-neutral-800/60">
+                {gexMinor.length === 0 && (
+                  <li className="text-neutral-500 text-center py-1.5">
+                    sem dados
+                  </li>
+                )}
+                {gexMinor.map((g) => (
+                  <li
+                    key={g.label}
+                    className="flex items-center justify-between py-1.5"
+                  >
+                    <span className="text-cyan-500/80">{g.label}</span>
+                    <span className="tabular-nums">{g.strike}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* BANDAS 1D */}
+            <div className="rounded-xl border border-neutral-800/60 bg-black/20 p-4 h-full flex flex-col">
+              <div className="text-sm font-semibold text-neutral-200 mb-3 text-center">
+                Variação 1D Max/Min (σ) —{" "}
+                {data.bands?.gammaPositive ? (
+                  <span className="text-emerald-500">exposição γ+</span>
+                ) : (
+                  <span className="text-red-500">exposição γ−</span>
+                )}
+              </div>
+
+              <div className="text-xs text-neutral-400 mb-3 flex flex-wrap gap-x-4 gap-y-1">
+                <span>σ_real: {pct(data.bands?.sigma?.realized)}</span>
+                <span>σ_impl(1d): {pct(data.bands?.sigma?.implied1d)}</span>
+                <span>σ_base: {pct(data.bands?.sigma?.base)}</span>
+                <span>
+                  risk-reversal:{" "}
+                  {data.bands?.sigma?.rr == null
+                    ? "—"
+                    : (100 * data.bands.sigma.rr).toFixed(2) + "%"}
+                </span>
+                <span>σ_up: {pct(data.bands?.sigma?.up)}</span>
+                <span>σ_dn: {pct(data.bands?.sigma?.dn)}</span>
+              </div>
+
+              {data.bands?.anchors?.spot && (
+                <div className="mt-auto">
+                  <div className="text-xs text-neutral-400 mb-2">
+                    Âncora (spot): {fmtPx(data.bands.anchors.spot.anchor)}
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-sm">
+                    <div className="rounded border border-neutral-800/60 p-2">
+                      <div className="text-neutral-500 text-xs mb-1">1σ</div>
+                      <div className="text-neutral-500">
+                        Max: {fmtPx(data.bands.anchors.spot.levels["1σ"].max)}
+                      </div>
+                      <div className="text-neutral-500">
+                        Min: {fmtPx(data.bands.anchors.spot.levels["1σ"].min)}
+                      </div>
+                    </div>
+                    <div className="rounded border border-neutral-800/60 p-2">
+                      <div className="text-neutral-300 text-sm mb-1">
+                        2σ (região de retorno à média)
+                      </div>
+                      <div className="text-indigo-400 font-medium">
+                        Max: {fmtPx(data.bands.anchors.spot.levels["2σ"].max)}
+                      </div>
+                      <div className="text-indigo-400 font-medium">
+                        Min: {fmtPx(data.bands.anchors.spot.levels["2σ"].min)}
+                      </div>
+                    </div>
+                    <div className="rounded border border-neutral-800/60 p-2">
+                      <div className="text-neutral-500 text-xs mb-1">3σ</div>
+                      <div className="text-neutral-500">
+                        Max: {fmtPx(data.bands.anchors.spot.levels["3σ"].max)}
+                      </div>
+                      <div className="text-neutral-500">
+                        Min: {fmtPx(data.bands.anchors.spot.levels["3σ"].min)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* CALL (0DTE) */}
-          <div className="rounded-xl border border-neutral-800/60 p-4">
-            <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
-              CALL GEX <span className="text-neutral-500">(0DTE)</span>
-            </div>
-            <ul className="text-sm space-y-2">
-              {(tables!.topCalls0?.length ? tables!.topCalls0 : []).map(
-                (r, i) => (
+          {/* Charts */}
+          <div className="w-full space-y-6 pb-6">
+            <GexMassChart
+              title="Call vs Put GEX — 0DTE"
+              data={data.mass0Bars}
+              spot={data.spot}
+              callResistance={lv.zeroDTE?.callResistance ?? undefined}
+              putSupport={lv.zeroDTE?.putSupport ?? undefined}
+              hvl={lv.zeroDTE?.hvl ?? undefined}
+              normalizeBars={true}
+              normalizeQuantile={0.9}
+            />
+            <GexMassChart
+              title="Call vs Put GEX — todas as expirações"
+              data={data.massAllBars}
+              spot={data.spot}
+              callResistance={lv.callResistance}
+              putSupport={lv.putSupport}
+              hvl={lv.hvl}
+              normalizeBars={false}
+            />
+          </div>
+
+          {/* Tabelas topo */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 pt-2 mb-24">
+            {/* CALL (todas) */}
+            <div className="rounded-xl border border-neutral-800/60 p-4">
+              <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
+                CALL GEX <span className="text-neutral-500">(todas)</span>
+              </div>
+              <ul className="text-sm space-y-2">
+                {tables!.topCallsAll.map((r, i) => (
                   <li key={i} className="flex items-center justify-between">
                     <span className="text-indigo-400">{r.strike}</span>
                     <span className="text-emerald-400 tabular-nums">
                       {fmtBig(r.value)}
                     </span>
                   </li>
-                )
-              )}
-              {!tables!.topCalls0?.length && (
-                <li className="text-neutral-500 text-sm text-center">
-                  sem dados 0DTE
-                </li>
-              )}
-            </ul>
-          </div>
-
-          {/* PUT (0DTE) */}
-          <div className="rounded-xl border border-neutral-800/60 p-4">
-            <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
-              PUT GEX <span className="text-neutral-500">(0DTE)</span>
+                ))}
+              </ul>
             </div>
-            <ul className="text-sm space-y-2">
-              {(tables!.topPuts0?.length ? tables!.topPuts0 : []).map(
-                (r, i) => (
+
+            {/* PUT (todas) */}
+            <div className="rounded-xl border border-neutral-800/60 p-4">
+              <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
+                PUT GEX <span className="text-neutral-500">(todas)</span>
+              </div>
+              <ul className="text-sm space-y-2">
+                {tables!.topPutsAll.map((r, i) => (
                   <li key={i} className="flex items-center justify-between">
                     <span className="text-indigo-400">{r.strike}</span>
                     <span className="text-red-400 tabular-nums">
                       {fmtBig(r.value)}
                     </span>
                   </li>
-                )
-              )}
-              {!tables!.topPuts0?.length && (
-                <li className="text-neutral-500 text-sm text-center">
-                  sem dados 0DTE
-                </li>
-              )}
-            </ul>
-          </div>
-
-          {/* NET (todas) */}
-          <div className="rounded-xl border border-neutral-800/60 p-4">
-            <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
-              NET GEX <span className="text-neutral-500">(todas)</span>
+                ))}
+              </ul>
             </div>
-            <ul className="text-sm space-y-2">
-              {tables!.topNetAll.map((r, i) => (
-                <li key={i} className="flex items-center justify-between">
-                  <span className="text-indigo-400">{r.strike}</span>
-                  <span
-                    className={`tabular-nums ${
-                      r.dom === "CALL" ? "text-emerald-400" : "text-red-400"
-                    }`}
-                  >
-                    {fmtBig(r.net)}{" "}
-                    <span className="text-xs text-neutral-400">({r.dom})</span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
 
-          {/* TOTAL (0DTE) */}
-          <div className="rounded-xl border border-neutral-800/60 p-4">
-            <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
-              TOTAL GEX <span className="text-neutral-500">(0DTE)</span>
+            {/* CALL (0DTE) */}
+            <div className="rounded-xl border border-neutral-800/60 p-4">
+              <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
+                CALL GEX <span className="text-neutral-500">(0DTE)</span>
+              </div>
+              <ul className="text-sm space-y-2">
+                {(tables!.topCalls0?.length ? tables!.topCalls0 : []).map(
+                  (r, i) => (
+                    <li key={i} className="flex items-center justify-between">
+                      <span className="text-indigo-400">{r.strike}</span>
+                      <span className="text-emerald-400 tabular-nums">
+                        {fmtBig(r.value)}
+                      </span>
+                    </li>
+                  )
+                )}
+                {!tables!.topCalls0?.length && (
+                  <li className="text-neutral-500 text-sm text-center">
+                    sem dados 0DTE
+                  </li>
+                )}
+              </ul>
             </div>
-            <ul className="text-sm space-y-2">
-              {(tables!.topGross0?.length ? tables!.topGross0 : []).map(
-                (r: any, i: number) => (
+
+            {/* PUT (0DTE) */}
+            <div className="rounded-xl border border-neutral-800/60 p-4">
+              <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
+                PUT GEX <span className="text-neutral-500">(0DTE)</span>
+              </div>
+              <ul className="text-sm space-y-2">
+                {(tables!.topPuts0?.length ? tables!.topPuts0 : []).map(
+                  (r, i) => (
+                    <li key={i} className="flex items-center justify-between">
+                      <span className="text-indigo-400">{r.strike}</span>
+                      <span className="text-red-400 tabular-nums">
+                        {fmtBig(r.value)}
+                      </span>
+                    </li>
+                  )
+                )}
+                {!tables!.topPuts0?.length && (
+                  <li className="text-neutral-500 text-sm text-center">
+                    sem dados 0DTE
+                  </li>
+                )}
+              </ul>
+            </div>
+
+            {/* NET (todas) */}
+            <div className="rounded-xl border border-neutral-800/60 p-4">
+              <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
+                NET GEX <span className="text-neutral-500">(todas)</span>
+              </div>
+              <ul className="text-sm space-y-2">
+                {tables!.topNetAll.map((r, i) => (
                   <li key={i} className="flex items-center justify-between">
                     <span className="text-indigo-400">{r.strike}</span>
-                    <span className="tabular-nums">
-                      <span className="text-neutral-300 mr-2">
-                        {fmtBig(r.total)}
-                      </span>
-                      <span
-                        className={`text-xs ${
-                          r.dom === "CALL" ? "text-emerald-400" : "text-red-400"
-                        }`}
-                      >
+                    <span
+                      className={`tabular-nums ${
+                        r.dom === "CALL" ? "text-emerald-400" : "text-red-400"
+                      }`}
+                    >
+                      {fmtBig(r.net)}{" "}
+                      <span className="text-xs text-neutral-400">
                         ({r.dom})
                       </span>
                     </span>
                   </li>
-                )
-              )}
-              {!tables!.topGross0?.length && (
-                <li className="text-neutral-500 text-sm text-center">
-                  sem dados 0DTE
-                </li>
-              )}
-            </ul>
+                ))}
+              </ul>
+            </div>
+
+            {/* TOTAL (0DTE) */}
+            <div className="rounded-xl border border-neutral-800/60 p-4">
+              <div className="text-sm font-semibold text-center mb-3 text-neutral-200">
+                TOTAL GEX <span className="text-neutral-500">(0DTE)</span>
+              </div>
+              <ul className="text-sm space-y-2">
+                {(tables!.topGross0?.length ? tables!.topGross0 : []).map(
+                  (r: any, i: number) => (
+                    <li key={i} className="flex items-center justify-between">
+                      <span className="text-indigo-400">{r.strike}</span>
+                      <span className="tabular-nums">
+                        <span className="text-neutral-300 mr-2">
+                          {fmtBig(r.total)}
+                        </span>
+                        <span
+                          className={`text-xs ${
+                            r.dom === "CALL"
+                              ? "text-emerald-400"
+                              : "text-red-400"
+                          }`}
+                        >
+                          ({r.dom})
+                        </span>
+                      </span>
+                    </li>
+                  )
+                )}
+                {!tables!.topGross0?.length && (
+                  <li className="text-neutral-500 text-sm text-center">
+                    sem dados 0DTE
+                  </li>
+                )}
+              </ul>
+            </div>
           </div>
         </div>
       </div>
