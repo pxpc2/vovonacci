@@ -1,1 +1,1 @@
-![Alt text](/public/screenshot.png)
+![Alt text](/public/image.png)
